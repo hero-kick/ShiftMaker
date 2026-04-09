@@ -1,30 +1,29 @@
 import os
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from models import GenerateRequest, ShiftResult
 from sample_data import get_sample_data
 import solver
 
 app = FastAPI(title="ShiftMaker API", version="1.0.0")
 
-# CORS: ローカル開発 + デプロイ先のフロントエンドURL
-cors_origins = [
-    "http://localhost:5173", "http://127.0.0.1:5173",
-    "http://localhost:5174", "http://localhost:5175",
-    "http://192.168.10.101:5174",
-]
-# 環境変数 FRONTEND_URL が設定されていれば追加（Vercelデプロイ用）
-frontend_url = os.environ.get("FRONTEND_URL")
-if frontend_url:
-    cors_origins.append(frontend_url)
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origins=[
+        "http://localhost:5173", "http://127.0.0.1:5173",
+        "http://localhost:5174", "http://localhost:5175",
+        "http://192.168.10.101:5174",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 本番用: ビルド済みフロントエンドの静的ファイル配信
+STATIC_DIR = Path(__file__).parent / "static"
 
 
 @app.get("/api/health")
@@ -49,3 +48,16 @@ def generate_shift(request: GenerateRequest):
 @app.get("/api/sample")
 def get_sample():
     return get_sample_data()
+
+
+# 本番用: フロントエンド静的ファイル配信（Dockerビルド時に配置）
+if STATIC_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        """SPAのフォールバック: 全パスをindex.htmlに"""
+        file_path = STATIC_DIR / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        return FileResponse(STATIC_DIR / "index.html")
