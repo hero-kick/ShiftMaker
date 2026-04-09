@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from models import GenerateRequest, ShiftResult
@@ -6,11 +7,20 @@ import solver
 
 app = FastAPI(title="ShiftMaker API", version="1.0.0")
 
+# CORS: ローカル開発 + デプロイ先のフロントエンドURL
+cors_origins = [
+    "http://localhost:5173", "http://127.0.0.1:5173",
+    "http://localhost:5174", "http://localhost:5175",
+    "http://192.168.10.101:5174",
+]
+# 環境変数 FRONTEND_URL が設定されていれば追加（Vercelデプロイ用）
+frontend_url = os.environ.get("FRONTEND_URL")
+if frontend_url:
+    cors_origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173",
-                   "http://localhost:5174", "http://localhost:5175",
-                   "http://192.168.10.101:5174"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

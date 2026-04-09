@@ -1,7 +1,13 @@
 import axios from 'axios'
 
+// ローカル開発: Vite proxyで /api → localhost:8000
+// 本番: VITE_API_URL 環境変数でRenderのURLを指定
+const baseURL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api'
+
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
