@@ -2989,3 +2989,201 @@ tr:hover td {
   font-size: 12px;
   color: var(--text-secondary);
 }
+
+/* ========== Workspace Gate ========== */
+.ws-gate {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
+}
+.ws-card {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 24px 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+.ws-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.ws-header h1 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  color: #2c3e50;
+}
+.ws-subtitle {
+  margin: 0;
+  color: #7a8a9a;
+  font-size: 13px;
+}
+.ws-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ws-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #fafbfc;
+}
+.ws-item:hover, .ws-item:active {
+  border-color: #4a90e2;
+  background: #f0f7ff;
+}
+.ws-item-main {
+  flex: 1;
+  min-width: 0;
+}
+.ws-item-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ws-item-meta {
+  font-size: 11px;
+  color: #7a8a9a;
+  margin-top: 2px;
+}
+.ws-item-delete {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: #f0f0f0;
+  color: #999;
+  font-size: 18px;
+  cursor: pointer;
+}
+.ws-item-delete:hover {
+  background: #ffebee;
+  color: #e53935;
+}
+.ws-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ws-form-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+.ws-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: #4a5568;
+}
+.ws-input {
+  padding: 12px 14px;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ws-input:focus {
+  border-color: #4a90e2;
+}
+.ws-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.ws-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ws-btn-primary {
+  background: #4a90e2;
+  color: #fff;
+}
+.ws-btn-primary:hover:not(:disabled) {
+  background: #357abd;
+}
+.ws-btn-primary:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+}
+.ws-btn-secondary {
+  background: #edf2f7;
+  color: #4a5568;
+}
+.ws-btn-secondary:hover {
+  background: #e2e8f0;
+}
+.ws-error {
+  padding: 10px 12px;
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 6px;
+  color: #c53030;
+  font-size: 13px;
+}
+.ws-footer {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #edf2f7;
+  font-size: 11px;
+  color: #a0aec0;
+  text-align: center;
+  line-height: 1.5;
+}
+.ws-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7a8a9a;
+}
+
+/* Workspace switch button in headers */
+.ws-switch-btn {
+  margin-left: 10px;
+  padding: 6px 12px;
+  background: #edf2f7;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ws-switch-btn:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e0;
+}
+.mobile-more-ws {
+  padding: 8px 14px;
+  font-size: 11px;
+  color: #7a8a9a;
+  border-bottom: 1px solid #edf2f7;
+  margin-bottom: 4px;
+}

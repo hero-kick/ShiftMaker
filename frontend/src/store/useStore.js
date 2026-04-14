@@ -1,7 +1,13 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { getCurrentWorkspaceId, storageKeyFor } from '../workspace'
 
-const STORAGE_KEY = 'shiftmaker-v2'
+// 現在選択中のワークスペース単位で独立した localStorage キーを使う。
+// ワークスペース未選択のときは一時的な揮発領域に書く（Gate 画面通過前の保険）。
+const activeWorkspaceId = getCurrentWorkspaceId()
+const STORAGE_KEY = activeWorkspaceId
+  ? storageKeyFor(activeWorkspaceId)
+  : 'shiftmaker-v2-__unassigned__'
 const MAX_STORED_MONTHS = 3  // 直近3ヶ月分のスケジュールを保持
 
 const DEFAULT_SHIFT_TYPES = [

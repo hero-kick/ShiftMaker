@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import useStore from './store/useStore'
 import { generateShift, getSampleData } from './api/client'
+import { getCurrentWorkspace, setCurrentWorkspaceId } from './workspace'
 import StaffManager from './components/StaffManager'
 import WishInput from './components/WishInput'
 import DayConditionInput from './components/DayConditionInput'
@@ -37,6 +38,13 @@ export default function App() {
   const [successMsg, setSuccessMsg] = useState('')
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false)
   const isMobile = useIsMobile()
+  const currentWs = getCurrentWorkspace()
+
+  const handleSwitchWorkspace = () => {
+    if (!window.confirm('ワークスペースを切り替えますか？（未保存の操作がある場合は先に完了してください）')) return
+    setCurrentWorkspaceId(null)
+    window.location.reload()
+  }
 
   const {
     staff,
@@ -226,6 +234,8 @@ export default function App() {
               </button>
               {mobileMoreOpen && (
                 <div className="mobile-more-menu">
+                  <div className="mobile-more-ws">WS: {currentWs?.name || '-'}</div>
+                  <button onClick={handleSwitchWorkspace}>ワークスペース切替</button>
                   <button onClick={handleLoadSample} disabled={loading}>サンプル読込</button>
                   <button onClick={handleClearAll} disabled={loading} className="danger-text">全消去</button>
                 </div>
@@ -239,6 +249,15 @@ export default function App() {
           <div className="header-left">
             <h1 className="app-title">ShiftMaker</h1>
             <span className="app-subtitle">看護師シフト管理システム</span>
+            {currentWs && (
+              <button
+                className="ws-switch-btn"
+                onClick={handleSwitchWorkspace}
+                title="ワークスペースを切り替える"
+              >
+                👤 {currentWs.name}
+              </button>
+            )}
           </div>
           <div className="header-controls">
             <div className="month-selector">
