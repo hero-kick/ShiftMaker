@@ -8,15 +8,18 @@ import DayConditionInput from './components/DayConditionInput'
 import EventCalendar from './components/EventCalendar'
 import ShiftTable from './components/ShiftTable'
 import ShiftSummary from './components/ShiftSummary'
+import Guide from './components/Guide'
 
 const TABS = [
-  { id: 'staff', label: 'スタッフ管理', shortLabel: 'スタッフ' },
-  { id: 'wish', label: '希望入力', shortLabel: '希望' },
-  { id: 'event', label: 'イベント', shortLabel: 'イベント' },
-  { id: 'condition', label: '日別条件', shortLabel: '条件' },
-  { id: 'table', label: 'シフト表', shortLabel: 'シフト' },
-  { id: 'summary', label: '集計', shortLabel: '集計' },
+  { id: 'staff', label: 'スタッフ管理', shortLabel: 'スタッフ', step: 1 },
+  { id: 'wish', label: '希望入力', shortLabel: '希望', step: 2 },
+  { id: 'event', label: 'イベント', shortLabel: 'イベント', step: 3 },
+  { id: 'condition', label: '日別条件', shortLabel: '条件', step: 4 },
+  { id: 'table', label: 'シフト表', shortLabel: 'シフト', step: 5 },
+  { id: 'summary', label: '集計', shortLabel: '集計', step: 6 },
 ]
+
+const ONBOARDING_KEY = 'shiftmaker-seen-onboarding'
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(
@@ -37,8 +40,24 @@ export default function App() {
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false)
+  const [guideOpen, setGuideOpen] = useState(false)
+  const [onboardingOpen, setOnboardingOpen] = useState(false)
   const isMobile = useIsMobile()
   const currentWs = getCurrentWorkspace()
+
+  // 初回ユーザー: ワークスペース作成直後で staff も空ならオンボーディング表示
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem(ONBOARDING_KEY)
+      if (!seen) setOnboardingOpen(true)
+    } catch {}
+  }, [])
+
+  const dismissOnboarding = (openGuide = false) => {
+    try { localStorage.setItem(ONBOARDING_KEY, '1') } catch {}
+    setOnboardingOpen(false)
+    if (openGuide) setGuideOpen(true)
+  }
 
   const handleSwitchWorkspace = () => {
     if (!window.confirm('ワークスペースを切り替えますか？（未保存の操作がある場合は先に完了してください）')) return
@@ -201,6 +220,13 @@ export default function App() {
         <header className="app-header mobile-header">
           <div className="mobile-header-row">
             <h1 className="app-title">ShiftMaker</h1>
+            <button
+              className="mobile-help-btn"
+              onClick={() => setGuideOpen(true)}
+              aria-label="使い方ガイド"
+            >
+              ？
+            </button>
             <div className="mobile-header-month">
               <select
                 value={`${year}-${month}`}
@@ -235,6 +261,7 @@ export default function App() {
               {mobileMoreOpen && (
                 <div className="mobile-more-menu">
                   <div className="mobile-more-ws">WS: {currentWs?.name || '-'}</div>
+                  <button onClick={() => { setGuideOpen(true); setMobileMoreOpen(false) }}>使い方ガイド</button>
                   <button onClick={handleSwitchWorkspace}>ワークスペース切替</button>
                   <button onClick={handleLoadSample} disabled={loading}>サンプル読込</button>
                   <button onClick={handleClearAll} disabled={loading} className="danger-text">全消去</button>
@@ -260,6 +287,13 @@ export default function App() {
             )}
           </div>
           <div className="header-controls">
+            <button
+              className="btn btn-help"
+              onClick={() => setGuideOpen(true)}
+              title="使い方ガイドを開く"
+            >
+              ？ 使い方
+            </button>
             <div className="month-selector">
               <label>対象月</label>
               <input
@@ -342,6 +376,7 @@ export default function App() {
                 className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
                 onClick={() => setActiveTab(tab.id)}
               >
+                <span className="tab-step">{tab.step}</span>
                 {tab.label}
                 {badge !== null && (
                   <span className="tab-badge" style={
@@ -381,6 +416,39 @@ export default function App() {
         </footer>
       )}
 
+      {/* Onboarding (first visit after workspace creation) */}
+      {onboardingOpen && (
+        <div className="onboarding-overlay" onClick={() => dismissOnboarding(false)}>
+          <div className="onboarding-card" onClick={(e) => e.stopPropagation()}>
+            <div className="onboarding-icon">👋</div>
+            <h2 className="onboarding-title">ShiftMaker へようこそ</h2>
+            <p className="onboarding-lead">
+              はじめての方は、まずは下のステップで進めてみてください。
+            </p>
+            <ol className="onboarding-steps">
+              <li><strong>①スタッフ管理</strong> でスタッフを登録</li>
+              <li><strong>②希望入力</strong> で希望休・有給を入れる</li>
+              <li>右上の <strong>「シフト生成」</strong> ボタンを押す</li>
+            </ol>
+            <div className="onboarding-actions">
+              <button className="ws-btn ws-btn-secondary" onClick={() => dismissOnboarding(true)}>
+                詳しい使い方を見る
+              </button>
+              <button className="ws-btn ws-btn-primary" onClick={() => dismissOnboarding(false)}>
+                始める
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Usage guide */}
+      <Guide
+        open={guideOpen}
+        onClose={() => setGuideOpen(false)}
+        onJumpToTab={(tabId) => setActiveTab(tabId)}
+      />
+
       {/* Mobile bottom tab bar */}
       {isMobile && (
         <nav className="mobile-bottom-nav">
@@ -392,6 +460,7 @@ export default function App() {
                 className={`mobile-bottom-tab ${activeTab === tab.id ? 'active' : ''}`}
                 onClick={() => { setActiveTab(tab.id); window.scrollTo(0, 0) }}
               >
+                <span className="mobile-tab-step">{tab.step}</span>
                 <span className="mobile-tab-label">{tab.shortLabel}</span>
                 {badge !== null && (
                   <span className={`mobile-tab-badge ${tab.id === 'event' ? 'badge-event' : tab.id === 'table' ? 'badge-done' : ''}`}>
