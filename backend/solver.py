@@ -227,7 +227,9 @@ def solve(request: GenerateRequest) -> dict:
     # Hard constraint 11: ペア制約
     #   forbid  = 同じ日に両者が「夜勤(N)」になるのを禁止。
     #              日勤や明け・早番・遅番の被りはOK、夜勤の丸被りのみNG。
-    #   require = 同日出勤マスト（両方とも O/Y でない、または両方とも O/Y）
+    #   require = 同じシフトコードに同日アサイン強制。
+    #              例: 両者とも D（日勤）、または両者とも N（夜勤）、または両者とも O（休）。
+    #              片方が日勤・片方が夜勤、のような違うシフトでの「同日出勤」は禁止。
     for pair in request.pairs:
         a_id = pair.staff_a_id
         b_id = pair.staff_b_id
@@ -238,9 +240,9 @@ def solve(request: GenerateRequest) -> dict:
                 # 夜勤同時アサインを禁止
                 model.add(x[a_id][d][SHIFT_N] + x[b_id][d][SHIFT_N] <= 1)
             elif pair.type == "require":
-                a_works = sum(x[a_id][d][sc] for sc in WORK_SHIFT_CODES)
-                b_works = sum(x[b_id][d][sc] for sc in WORK_SHIFT_CODES)
-                model.add(a_works == b_works)
+                # すべてのシフトコードについて、両者の割当が一致
+                for sc in SHIFT_CODES:
+                    model.add(x[a_id][d][sc] == x[b_id][d][sc])
 
     # Hard constraint 12: リーダー必須（can_lead=True なスタッフが1人以上いる日のみ強制）
     # 病棟は毎日 1 人リーダーが必要 → リーダー資格者が最低1名出勤
@@ -335,7 +337,8 @@ def solve(request: GenerateRequest) -> dict:
 
     # Soft constraint 6: 休日(O)数を全スタッフで均等化
     # 必要勤務枠（D/E/L/N + A）と Y 希望を引いた残りが「割り当て可能な休日の総枠」
-    # それを人数で割った target_o に各人を近づける。下回る側を重く罰する（不公平回避）。
+    # それを人数で割った target_o に各人を近づける。
+    # 上下どちらの逸脱も同程度に厳しく罰する（不公平回避）。
     total_d_req = sum(_get_required_d(day_conditions_map.get(d)) for d in days)
     total_n_req = sum(_get_required_n(day_conditions_map.get(d)) for d in days)
     total_e_req = sum(
@@ -354,15 +357,31 @@ def solve(request: GenerateRequest) -> dict:
         total_off_slots = max(0, len(staff_ids) * num_days - total_work_slots - total_y)
         target_o = total_off_slots // len(staff_ids)
 
+        # 上限: target_o + 3 を超える休日は許可しない（暴走防止のハードキャップ）
+        # ただし、強制休日（forbidden_staff_ids）と Y 希望で押し上げられる分は許容
+        for sid in staff_ids:
+            forced_off = sum(
+                1 for d in days
+                if day_conditions_map.get(d) is not None
+                and sid in day_conditions_map[d].forbidden_staff_ids
+            )
+            y_count_for_staff = sum(
+                1 for (s, _), wt in wish_map.items()
+                if s == sid and wt == "有給"
+            )
+            # ハードキャップ: target_o + 3 か forced_off + y_count + 4 の大きい方
+            max_o_allowed = max(target_o + 3, forced_off + y_count_for_staff + 4)
+            o_count = sum(x[sid][d][SHIFT_O] for d in days)
+            model.add(o_count <= max_o_allowed)
+
         for sid in staff_ids:
             o_count = sum(x[sid][d][SHIFT_O] for d in days)
             dev_pos = model.new_int_var(0, num_days, f"o_dev_pos_{sid}")
             dev_neg = model.new_int_var(0, num_days, f"o_dev_neg_{sid}")
             model.add(o_count - target_o == dev_pos - dev_neg)
-            # 平均より少ない休日 = 不公平度高 → ペナルティ重め
-            penalty_terms.append(dev_neg * 40)
-            # 平均より多い休日 = まあ許容 → 軽めのペナルティ
-            penalty_terms.append(dev_pos * 15)
+            # 不公平はどちら側も同程度に重く罰する
+            penalty_terms.append(dev_neg * 80)
+            penalty_terms.append(dev_pos * 80)
 
     # Soft constraint 7: 各スタッフの月間最低休日数を保証（厳しすぎなければソフトに）
     # 31日 → 最低8日、30日 → 最低8日、29日 → 最低7日、28日 → 最低7日 を目安
@@ -372,8 +391,8 @@ def solve(request: GenerateRequest) -> dict:
         under_min = model.new_int_var(0, num_days, f"o_under_{sid}")
         model.add(min_off_target - o_count <= under_min)
         model.add(under_min >= 0)
-        # 「最低休日数を割った日数」1日あたり 60 のペナルティ（高い）
-        penalty_terms.append(under_min * 60)
+        # 「最低休日数を割った日数」1日あたり 80 のペナルティ
+        penalty_terms.append(under_min * 80)
 
     # Objective: minimize total penalty
     if penalty_terms:
