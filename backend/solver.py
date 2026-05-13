@@ -333,6 +333,48 @@ def solve(request: GenerateRequest) -> dict:
                     model.add(all_day <= 4).only_enforce_if(all_work.negated())
                     penalty_terms.append(all_work * 100)
 
+    # Soft constraint 6: 休日(O)数を全スタッフで均等化
+    # 必要勤務枠（D/E/L/N + A）と Y 希望を引いた残りが「割り当て可能な休日の総枠」
+    # それを人数で割った target_o に各人を近づける。下回る側を重く罰する（不公平回避）。
+    total_d_req = sum(_get_required_d(day_conditions_map.get(d)) for d in days)
+    total_n_req = sum(_get_required_n(day_conditions_map.get(d)) for d in days)
+    total_e_req = sum(
+        (day_conditions_map.get(d).required_per_shift.get("E", 0) if day_conditions_map.get(d) else 0)
+        for d in days
+    )
+    total_l_req = sum(
+        (day_conditions_map.get(d).required_per_shift.get("L", 0) if day_conditions_map.get(d) else 0)
+        for d in days
+    )
+    # 夜勤(N)に伴い翌日 A が必ず発生 → A 総数 ≒ N 総数
+    total_work_slots = total_d_req + total_e_req + total_l_req + total_n_req + total_n_req
+    total_y = sum(1 for (sid, _), wt in wish_map.items() if wt == "有給" and sid in staff_ids)
+
+    if len(staff_ids) > 0:
+        total_off_slots = max(0, len(staff_ids) * num_days - total_work_slots - total_y)
+        target_o = total_off_slots // len(staff_ids)
+
+        for sid in staff_ids:
+            o_count = sum(x[sid][d][SHIFT_O] for d in days)
+            dev_pos = model.new_int_var(0, num_days, f"o_dev_pos_{sid}")
+            dev_neg = model.new_int_var(0, num_days, f"o_dev_neg_{sid}")
+            model.add(o_count - target_o == dev_pos - dev_neg)
+            # 平均より少ない休日 = 不公平度高 → ペナルティ重め
+            penalty_terms.append(dev_neg * 40)
+            # 平均より多い休日 = まあ許容 → 軽めのペナルティ
+            penalty_terms.append(dev_pos * 15)
+
+    # Soft constraint 7: 各スタッフの月間最低休日数を保証（厳しすぎなければソフトに）
+    # 31日 → 最低8日、30日 → 最低8日、29日 → 最低7日、28日 → 最低7日 を目安
+    min_off_target = 8 if num_days >= 30 else 7
+    for sid in staff_ids:
+        o_count = sum(x[sid][d][SHIFT_O] for d in days)
+        under_min = model.new_int_var(0, num_days, f"o_under_{sid}")
+        model.add(min_off_target - o_count <= under_min)
+        model.add(under_min >= 0)
+        # 「最低休日数を割った日数」1日あたり 60 のペナルティ（高い）
+        penalty_terms.append(under_min * 60)
+
     # Objective: minimize total penalty
     if penalty_terms:
         model.minimize(sum(penalty_terms))
