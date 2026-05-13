@@ -9,14 +9,18 @@ import EventCalendar from './components/EventCalendar'
 import ShiftTable from './components/ShiftTable'
 import ShiftSummary from './components/ShiftSummary'
 import Guide from './components/Guide'
+import {
+  IconStaff, IconCalendar, IconStar, IconSettings, IconTable, IconChart,
+  IconPlay, IconHelp, IconMenu, IconUser, IconRefresh, IconClose, IconTrash,
+} from './components/Icons'
 
 const TABS = [
-  { id: 'staff', label: 'スタッフ管理', shortLabel: 'スタッフ', step: 1 },
-  { id: 'wish', label: '希望入力', shortLabel: '希望', step: 2 },
-  { id: 'event', label: 'イベント', shortLabel: 'イベント', step: 3 },
-  { id: 'condition', label: '日別条件', shortLabel: '条件', step: 4 },
-  { id: 'table', label: 'シフト表', shortLabel: 'シフト', step: 5 },
-  { id: 'summary', label: '集計', shortLabel: '集計', step: 6 },
+  { id: 'staff',     label: 'スタッフ', shortLabel: 'スタッフ', step: 1, Icon: IconStaff },
+  { id: 'wish',      label: '希望',     shortLabel: '希望',     step: 2, Icon: IconCalendar },
+  { id: 'event',     label: 'イベント', shortLabel: 'イベント', step: 3, Icon: IconStar },
+  { id: 'condition', label: '人数',     shortLabel: '人数',     step: 4, Icon: IconSettings },
+  { id: 'table',     label: 'シフト表', shortLabel: 'シフト',   step: 5, Icon: IconTable },
+  { id: 'summary',   label: '集計',     shortLabel: '集計',     step: 6, Icon: IconChart },
 ]
 
 const ONBOARDING_KEY = 'shiftmaker-seen-onboarding'
@@ -227,7 +231,7 @@ export default function App() {
               onClick={() => setGuideOpen(true)}
               aria-label="使い方ガイド"
             >
-              ？
+              <IconHelp size={22} />
             </button>
             <div className="mobile-header-month">
               <select
@@ -250,15 +254,17 @@ export default function App() {
               className="mobile-generate-btn"
               onClick={handleGenerate}
               disabled={loading || staff.length === 0}
+              aria-label="シフト生成"
             >
-              {loading ? <span className="spinner" /> : '生成'}
+              {loading ? <span className="spinner" /> : <><IconPlay size={20} /> 生成</>}
             </button>
             <div className="mobile-more-wrapper">
               <button
                 className="mobile-more-toggle"
                 onClick={() => setMobileMoreOpen(!mobileMoreOpen)}
+                aria-label="その他のメニュー"
               >
-                ···
+                <IconMenu size={22} />
               </button>
               {mobileMoreOpen && (
                 <div className="mobile-more-menu">
@@ -284,7 +290,7 @@ export default function App() {
                 onClick={handleSwitchWorkspace}
                 title="ワークスペースを切り替える"
               >
-                👤 {currentWs.name}
+                <IconUser size={18} /> {currentWs.name}
               </button>
             )}
           </div>
@@ -294,7 +300,7 @@ export default function App() {
               onClick={() => setGuideOpen(true)}
               title="使い方ガイドを開く"
             >
-              ？ 使い方
+              <IconHelp size={22} /> 使い方
             </button>
             <div className="month-selector">
               <label>対象月</label>
@@ -321,7 +327,7 @@ export default function App() {
               </select>
             </div>
             <button className="btn btn-secondary" onClick={handleLoadSample} disabled={loading}>
-              サンプル読込
+              <IconRefresh size={20} /> サンプル
             </button>
             <button
               className="btn btn-clear"
@@ -329,7 +335,7 @@ export default function App() {
               disabled={loading}
               title="全データを消去"
             >
-              消去
+              <IconTrash size={20} /> 消去
             </button>
             <button
               className="btn btn-primary generate-btn"
@@ -342,7 +348,7 @@ export default function App() {
                   <span className="spinner" /> 生成中...
                 </span>
               ) : (
-                'シフト生成'
+                <><IconPlay size={22} /> シフト生成</>
               )}
             </button>
           </div>
@@ -372,14 +378,16 @@ export default function App() {
         <nav className="tab-nav">
           {TABS.map((tab) => {
             const badge = tabBadge(tab.id)
+            const Icon = tab.Icon
             return (
               <button
                 key={tab.id}
                 className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
                 onClick={() => setActiveTab(tab.id)}
               >
+                <span className="tab-icon"><Icon size={26} /></span>
                 <span className="tab-step">{tab.step}</span>
-                {tab.label}
+                <span className="tab-label">{tab.label}</span>
                 {badge !== null && (
                   <span className="tab-badge" style={
                     tab.id === 'event' ? { backgroundColor: '#E53935' } :
@@ -423,21 +431,35 @@ export default function App() {
         <div className="onboarding-overlay" onClick={() => dismissOnboarding(false)}>
           <div className="onboarding-card" onClick={(e) => e.stopPropagation()}>
             <div className="onboarding-icon">👋</div>
-            <h2 className="onboarding-title">ShiftMaker へようこそ</h2>
+            <h2 className="onboarding-title">ようこそ</h2>
             <p className="onboarding-lead">
-              はじめての方は、まずは下のステップで進めてみてください。
+              3ステップでシフトが完成します
             </p>
-            <ol className="onboarding-steps">
-              <li><strong>①スタッフ管理</strong> でスタッフを登録</li>
-              <li><strong>②希望入力</strong> で希望休・有給を入れる</li>
-              <li>右上の <strong>「シフト生成」</strong> ボタンを押す</li>
-            </ol>
+            <div className="onboarding-flow">
+              <div className="onboarding-step">
+                <div className="onboarding-step-num">1</div>
+                <div className="onboarding-step-icon"><IconStaff size={36} /></div>
+                <div className="onboarding-step-text">スタッフを登録</div>
+              </div>
+              <div className="onboarding-step-arrow">→</div>
+              <div className="onboarding-step">
+                <div className="onboarding-step-num">2</div>
+                <div className="onboarding-step-icon"><IconCalendar size={36} /></div>
+                <div className="onboarding-step-text">希望休を入力</div>
+              </div>
+              <div className="onboarding-step-arrow">→</div>
+              <div className="onboarding-step">
+                <div className="onboarding-step-num">3</div>
+                <div className="onboarding-step-icon"><IconPlay size={36} /></div>
+                <div className="onboarding-step-text">生成ボタン</div>
+              </div>
+            </div>
             <div className="onboarding-actions">
               <button className="ws-btn ws-btn-secondary" onClick={() => dismissOnboarding(true)}>
-                詳しい使い方を見る
+                <IconHelp size={20} /> 詳しく見る
               </button>
               <button className="ws-btn ws-btn-primary" onClick={() => dismissOnboarding(false)}>
-                始める
+                <IconPlay size={20} /> 始める
               </button>
             </div>
           </div>
@@ -456,13 +478,14 @@ export default function App() {
         <nav className="mobile-bottom-nav">
           {TABS.map((tab) => {
             const badge = tabBadge(tab.id)
+            const Icon = tab.Icon
             return (
               <button
                 key={tab.id}
                 className={`mobile-bottom-tab ${activeTab === tab.id ? 'active' : ''}`}
                 onClick={() => { setActiveTab(tab.id); window.scrollTo(0, 0) }}
               >
-                <span className="mobile-tab-step">{tab.step}</span>
+                <span className="mobile-tab-icon"><Icon size={26} /></span>
                 <span className="mobile-tab-label">{tab.shortLabel}</span>
                 {badge !== null && (
                   <span className={`mobile-tab-badge ${tab.id === 'event' ? 'badge-event' : tab.id === 'table' ? 'badge-done' : ''}`}>

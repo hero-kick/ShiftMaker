@@ -97,6 +97,7 @@ export default function WorkspaceGate({ onEnter }) {
     <div className="ws-gate">
       <div className="ws-card">
         <div className="ws-header">
+          <div className="ws-hero-icon">📅</div>
           <h1>ShiftMaker</h1>
           <p className="ws-subtitle">ワークスペースを選択してください</p>
         </div>
