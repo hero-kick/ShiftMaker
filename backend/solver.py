@@ -224,21 +224,24 @@ def solve(request: GenerateRequest) -> dict:
                 if sid in staff_ids:
                     model.add(x[sid][d][SHIFT_O] == 1)
 
-    # Hard constraint 11: ペア制約（同時出勤 NG / マスト）
-    # 「出勤している」= O でも Y でもない（= sum(x[work_shift_codes]) == 1）
+    # Hard constraint 11: ペア制約
+    #   forbid  = 同じシフトコードへの同日アサインを禁止（=「丸被り」禁止）
+    #              例: 両者とも D は不可、両者とも N は不可。
+    #              ただし D+A、A+N、D+L、D+O などの組合せはOK。
+    #   require = 同日出勤マスト（両方とも O/Y でない、または両方とも O/Y）
     for pair in request.pairs:
         a_id = pair.staff_a_id
         b_id = pair.staff_b_id
         if a_id not in staff_ids or b_id not in staff_ids:
             continue
         for d in days:
-            a_works = sum(x[a_id][d][sc] for sc in WORK_SHIFT_CODES)
-            b_works = sum(x[b_id][d][sc] for sc in WORK_SHIFT_CODES)
             if pair.type == "forbid":
-                # 両方が「出勤」になることを禁止
-                model.add(a_works + b_works <= 1)
+                # 各「勤務シフト」について、両者が同じシフトに同時にアサインされない
+                for sc in WORK_SHIFT_CODES:
+                    model.add(x[a_id][d][sc] + x[b_id][d][sc] <= 1)
             elif pair.type == "require":
-                # 両方が出勤、または両方が休/有給。 a_works == b_works
+                a_works = sum(x[a_id][d][sc] for sc in WORK_SHIFT_CODES)
+                b_works = sum(x[b_id][d][sc] for sc in WORK_SHIFT_CODES)
                 model.add(a_works == b_works)
 
     # Hard constraint 12: リーダー必須（can_lead=True なスタッフが1人以上いる日のみ強制）
