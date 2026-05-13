@@ -22,15 +22,51 @@ const defaultForm = {
   max_consecutive_days: 5,
 }
 
+const defaultBulkForm = {
+  role: '看護師',
+  count: 5,
+  night_available: true,
+  max_night: 8,
+  max_consecutive_days: 5,
+}
+
 export default function StaffManager() {
-  const { staff, addStaff, updateStaff, removeStaff } = useStore()
+  const { staff, addStaff, addStaffBulk, updateStaff, removeStaff } = useStore()
   const [form, setForm] = useState(defaultForm)
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [error, setError] = useState('')
   const [formOpen, setFormOpen] = useState(false)
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkForm, setBulkForm] = useState(defaultBulkForm)
+  const [bulkError, setBulkError] = useState('')
 
   const isMobile = useIsMobile()
+
+  const handleBulkChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setBulkForm((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
+    }))
+  }
+
+  const handleBulkSubmit = (e) => {
+    e.preventDefault()
+    const role = bulkForm.role.trim()
+    if (!role) {
+      setBulkError('役職名を入力してください')
+      return
+    }
+    if (!bulkForm.count || bulkForm.count < 1 || bulkForm.count > 50) {
+      setBulkError('人数は 1〜50 の範囲で指定してください')
+      return
+    }
+    addStaffBulk({ ...bulkForm, role })
+    setBulkError('')
+    setBulkOpen(false)
+    setBulkForm(defaultBulkForm)
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -86,6 +122,49 @@ export default function StaffManager() {
   const nightCount = staff.filter((s) => s.night_available).length
   const dayOnlyCount = staff.length - nightCount
 
+  // Bulk add form (shared between mobile / desktop)
+  const bulkAddForm = (
+    <form onSubmit={handleBulkSubmit} className="staff-form bulk-form">
+      <div className="bulk-hint">
+        役職名 + 人数で <strong>「{bulkForm.role || '役職'}1, {bulkForm.role || '役職'}2 ...」</strong> のように
+        まとめて登録します。あとから個別に名前を編集できます。
+      </div>
+      <div className="form-row">
+        <div className="form-group">
+          <label>役職名 <span className="required">*</span></label>
+          <input
+            type="text"
+            name="role"
+            value={bulkForm.role}
+            onChange={handleBulkChange}
+            placeholder="例: 看護師 / 主任 / 准看護師"
+            maxLength={20}
+          />
+        </div>
+        <div className="form-group">
+          <label>人数 <span className="required">*</span></label>
+          <input type="number" name="count" value={bulkForm.count} onChange={handleBulkChange} min="1" max="50" />
+        </div>
+        <div className="form-group">
+          <label>夜勤上限</label>
+          <input type="number" name="max_night" value={bulkForm.max_night} onChange={handleBulkChange} min="0" max="20" />
+        </div>
+        <div className="form-group">
+          <label>連続勤務上限</label>
+          <input type="number" name="max_consecutive_days" value={bulkForm.max_consecutive_days} onChange={handleBulkChange} min="1" max="14" />
+        </div>
+        <div className="form-group checkbox-group">
+          <label>
+            <input type="checkbox" name="night_available" checked={bulkForm.night_available} onChange={handleBulkChange} />
+            全員 夜勤可能
+          </label>
+        </div>
+        <button type="submit" className="btn btn-primary">{bulkForm.count}名 一括追加</button>
+      </div>
+      {bulkError && <p className="error-msg">{bulkError}</p>}
+    </form>
+  )
+
   // Mobile: collapsible add form
   const addForm = (
     <form onSubmit={handleSubmit} className="staff-form">
@@ -133,18 +212,47 @@ export default function StaffManager() {
               </div>
               {addForm}
             </div>
+          ) : bulkOpen ? (
+            <div className="card mobile-form-card">
+              <div className="mobile-form-header">
+                <h3 style={{ margin: 0, border: 'none', padding: 0 }}>まとめて追加</h3>
+                <button className="mobile-form-close" onClick={() => { setBulkOpen(false); setBulkError('') }}>✕</button>
+              </div>
+              {bulkAddForm}
+            </div>
           ) : (
-            <button className="mobile-add-btn" onClick={() => setFormOpen(true)}>
-              <span className="mobile-add-icon">+</span>
-              スタッフを追加
-            </button>
+            <div className="mobile-add-row">
+              <button className="mobile-add-btn mobile-add-btn-secondary" onClick={() => setBulkOpen(true)}>
+                <span className="mobile-add-icon">⚡</span>
+                まとめて追加
+              </button>
+              <button className="mobile-add-btn" onClick={() => setFormOpen(true)}>
+                <span className="mobile-add-icon">+</span>
+                1名追加
+              </button>
+            </div>
           )}
         </>
       ) : (
-        <div className="card">
-          <h3>新規スタッフ追加</h3>
-          {addForm}
-        </div>
+        <>
+          <div className="card">
+            <div className="staff-form-tabs">
+              <button
+                className={`staff-form-tab ${!bulkOpen ? 'active' : ''}`}
+                onClick={() => setBulkOpen(false)}
+              >
+                1名ずつ追加
+              </button>
+              <button
+                className={`staff-form-tab ${bulkOpen ? 'active' : ''}`}
+                onClick={() => setBulkOpen(true)}
+              >
+                ⚡ まとめて追加（おすすめ）
+              </button>
+            </div>
+            {bulkOpen ? bulkAddForm : addForm}
+          </div>
+        </>
       )}
 
       {/* Staff list */}
@@ -156,9 +264,21 @@ export default function StaffManager() {
         </div>
 
         {staff.length === 0 ? (
-          <div className="empty-msg" style={{ padding: isMobile ? '32px 16px' : undefined }}>
-            スタッフが登録されていません。<br />
-            {isMobile ? '上の「+」ボタンから追加するか、' : '上のフォームから追加するか、'}ヘッダーのサンプル読込をお試しください。
+          <div className="empty-msg empty-staff" style={{ padding: isMobile ? '32px 16px' : undefined }}>
+            <div className="empty-staff-icon">👥</div>
+            <div className="empty-staff-title">まだスタッフが登録されていません</div>
+            <div className="empty-staff-desc">
+              はじめての方は <strong>「⚡ まとめて追加」</strong> がおすすめです。
+              <br />役職名と人数を指定するだけで、暫定の名前で一気に登録できます。
+              <br />本名は後で1人ずつタップして編集できます。
+            </div>
+            <button
+              className="btn btn-primary"
+              onClick={() => { setBulkOpen(true); if (isMobile) setFormOpen(false) }}
+              style={{ marginTop: 14 }}
+            >
+              ⚡ まとめて追加する
+            </button>
           </div>
         ) : isMobile ? (
           <div className="staff-card-list">

@@ -3188,6 +3188,92 @@ tr:hover td {
   margin-bottom: 4px;
 }
 
+/* ========== Bulk add ========== */
+.staff-form-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #edf2f7;
+}
+.staff-form-tab {
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: #7a8a9a;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+}
+.staff-form-tab:hover {
+  color: #4a90e2;
+}
+.staff-form-tab.active {
+  color: #4a90e2;
+  border-bottom-color: #4a90e2;
+  font-weight: 600;
+}
+.bulk-hint {
+  background: #f0f7ff;
+  border-left: 4px solid #4a90e2;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: #2c3e50;
+  line-height: 1.6;
+}
+.bulk-form button[type="submit"] {
+  background: linear-gradient(135deg, #4a90e2, #357abd);
+}
+
+/* Mobile bulk row */
+.mobile-add-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.mobile-add-row .mobile-add-btn {
+  flex: 1;
+  margin-bottom: 0;
+}
+.mobile-add-btn-secondary {
+  background: linear-gradient(135deg, #4a90e2, #357abd) !important;
+  color: #fff !important;
+  font-weight: 700;
+}
+.mobile-add-btn-secondary .mobile-add-icon {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+/* Empty staff state */
+.empty-staff {
+  text-align: center;
+  padding: 40px 20px !important;
+}
+.empty-staff-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+.empty-staff-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+.empty-staff-desc {
+  color: #5a6a7a;
+  font-size: 14px;
+  line-height: 1.8;
+  margin-bottom: 8px;
+}
+.empty-staff strong {
+  color: #4a90e2;
+}
+
 /* ========== Help buttons ========== */
 .btn-help {
   padding: 8px 14px;

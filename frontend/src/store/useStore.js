@@ -51,6 +51,37 @@ const useStore = create(
           staff: [...state.staff, { ...staffMember, id: `s_${Date.now()}` }],
         })),
 
+      addStaffBulk: ({ role, count, night_available, max_night, max_consecutive_days }) =>
+        set((state) => {
+          const base = (role || '').trim() || 'スタッフ'
+          // 既に同じ役職で生成済みの番号を見て、続きから採番する
+          const usedNumbers = new Set(
+            state.staff
+              .map((s) => {
+                const m = s.name.match(new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\d+)$`))
+                return m ? Number(m[1]) : null
+              })
+              .filter((n) => n != null)
+          )
+          let nextNum = 1
+          const newOnes = []
+          const now = Date.now()
+          for (let i = 0; i < count; i++) {
+            while (usedNumbers.has(nextNum)) nextNum += 1
+            newOnes.push({
+              id: `s_${now}_${i}`,
+              name: `${base}${nextNum}`,
+              role: base,
+              night_available,
+              max_night,
+              max_consecutive_days,
+            })
+            usedNumbers.add(nextNum)
+            nextNum += 1
+          }
+          return { staff: [...state.staff, ...newOnes] }
+        }),
+
       updateStaff: (id, updates) =>
         set((state) => ({
           staff: state.staff.map((s) => (s.id === id ? { ...s, ...updates } : s)),

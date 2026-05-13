@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShiftMaker 使い方ガイド</title>
+<style>
+  :root {
+    --primary: #4a90e2;
+    --primary-dark: #357abd;
+    --text: #2c3e50;
+    --text-soft: #5a6a7a;
+    --muted: #7a8a9a;
+    --bg: #f7f9fc;
+    --card: #fff;
+    --border: #e2e8f0;
+    --accent: #fffbeb;
+    --accent-border: #f59e0b;
+    --info: #f0f7ff;
+    --danger: #fff5f5;
+    --danger-border: #e53935;
+    --success: #f0fdf4;
+    --success-border: #22c55e;
+    --d-shift: #4CAF50;
+    --n-shift: #9C27B0;
+    --a-shift: #FF9800;
+    --o-shift: #9E9E9E;
+    --y-shift: #2196F3;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    font-size: 16px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 48px 32px;
+    border-radius: 16px;
+    text-align: center;
+    margin-bottom: 32px;
+    box-shadow: 0 10px 30px rgba(74, 144, 226, 0.25);
+  }
+  .hero h1 { margin: 0 0 8px; font-size: 36px; }
+  .hero p { margin: 0; opacity: 0.95; font-size: 16px; }
+  .hero-icon { font-size: 56px; margin-bottom: 10px; }
+  /* TOC */
+  .toc {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+  }
+  .toc h2 { margin: 0 0 12px; font-size: 18px; color: var(--primary); }
+  .toc ol {
+    margin: 0;
+    padding-left: 22px;
+    columns: 2;
+    column-gap: 24px;
+  }
+  .toc li { margin-bottom: 6px; break-inside: avoid; }
+  .toc a {
+    color: var(--text);
+    text-decoration: none;
+  }
+  .toc a:hover { color: var(--primary); text-decoration: underline; }
+  /* Sections */
+  section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  h2.section-title {
+    margin: 0 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary);
+    color: var(--text);
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2.section-title::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 24px;
+    background: var(--primary);
+    border-radius: 3px;
+  }
+  h3 {
+    margin: 28px 0 10px;
+    color: var(--text);
+    font-size: 18px;
+    border-left: 4px solid var(--primary);
+    padding-left: 10px;
+  }
+  h4 {
+    margin: 20px 0 6px;
+    font-size: 15px;
+    color: var(--primary-dark);
+  }
+  p { margin: 0 0 12px; }
+  /* Step boxes */
+  .step-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: step;
+  }
+  .step-list li {
+    counter-increment: step;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px 14px 56px;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .step-list li::before {
+    content: counter(step);
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    width: 30px;
+    height: 30px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .step-list li strong { color: var(--primary-dark); }
+  /* Info boxes */
+  .info-box {
+    background: var(--info);
+    border-left: 5px solid var(--primary);
+    padding: 14px 18px;
+    border-radius: 6px;
+    margin: 14px 0;
+  }
+  .warn-box {
+    background: var(--accent);
+    border-left: 5px solid var(--accent-border);
+    padding: 14px 18px;
+    border-radius: 6px;
+    margin: 14px 0;
+  }
+  .danger-box {
+    background: var(--danger);
+    border-left: 5px solid var(--danger-border);
+    padding: 14px 18px;
+    border-radius: 6px;
+    margin: 14px 0;
+  }
+  .success-box {
+    background: var(--success);
+    border-left: 5px solid var(--success-border);
+    padding: 14px 18px;
+    border-radius: 6px;
+    margin: 14px 0;
+  }
+  .box-title {
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  /* Shift code chips */
+  .codes-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+  }
+  .codes-table th, .codes-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .codes-table th {
+    background: var(--bg);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: 800;
+    font-size: 16px;
+  }
+  .chip.d { background: var(--d-shift); }
+  .chip.n { background: var(--n-shift); }
+  .chip.a { background: var(--a-shift); }
+  .chip.o { background: var(--o-shift); }
+  .chip.y { background: var(--y-shift); }
+  /* Mock UI */
+  .mock {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 12px 0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+  .mock-bar {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mock-bar .right { margin-left: auto; font-size: 12px; opacity: 0.85; }
+  .mock-content {
+    padding: 14px 18px;
+    font-family: monospace;
+    font-size: 13px;
+    color: var(--text-soft);
+    line-height: 1.7;
+  }
+  .mock-btn {
+    display: inline-block;
+    background: var(--primary);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin: 0 2px;
+  }
+  .mock-tab {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #edf2f7;
+    color: var(--text);
+    font-size: 12px;
+    margin: 2px;
+  }
+  .mock-tab.active { background: var(--primary); color: #fff; }
+  /* FAQ */
+  details.faq {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+  }
+  details.faq[open] {
+    background: var(--info);
+    border-color: var(--primary);
+  }
+  details.faq summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    user-select: none;
+  }
+  details.faq[open] summary { margin-bottom: 8px; color: var(--primary-dark); }
+  details.faq p { margin: 6px 0 0; color: var(--text-soft); font-size: 14px; }
+  /* Specifics */
+  code {
+    background: #eef2f7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--primary-dark);
+  }
+  kbd {
+    display: inline-block;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 0.85em;
+    font-family: monospace;
+    box-shadow: 0 1px 0 #999;
+  }
+  .toc-back {
+    display: inline-block;
+    margin-top: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+  }
+  .toc-back:hover { color: var(--primary); }
+  /* Footer */
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin: 32px 0 16px;
+  }
+  /* Responsive */
+  @media (max-width: 640px) {
+    .container { padding: 16px; }
+    .hero { padding: 32px 20px; }
+    .hero h1 { font-size: 26px; }
+    section { padding: 20px 18px; }
+    h2.section-title { font-size: 20px; }
+    .toc ol { columns: 1; }
+  }
+  /* Print */
+  @media print {
+    body { background: #fff; }
+    .container { max-width: none; padding: 0; }
+    section { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+    .hero { background: #4a90e2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .toc { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+  <div class="hero-icon">📅</div>
+  <h1>ShiftMaker 使い方ガイド</h1>
+  <p>看護師シフト管理システム — はじめての方からヘビーユーザーまで</p>
+</div>
+
+<div class="toc">
+  <h2>📖 目次</h2>
+  <ol>
+    <li><a href="#about">ShiftMaker とは</a></li>
+    <li><a href="#access">スマホ・PC でアクセスする</a></li>
+    <li><a href="#install">ホーム画面に追加（アプリ化）</a></li>
+    <li><a href="#workspace">ワークスペースを作る</a></li>
+    <li><a href="#pin">PIN コードについて</a></li>
+    <li><a href="#flow">全体の流れ（7ステップ）</a></li>
+    <li><a href="#staff">①スタッフ管理</a></li>
+    <li><a href="#wish">②希望入力</a></li>
+    <li><a href="#event">③イベント</a></li>
+    <li><a href="#condition">④日別条件</a></li>
+    <li><a href="#generate">⑤シフト生成</a></li>
+    <li><a href="#table">⑥シフト表（確認・編集）</a></li>
+    <li><a href="#summary">⑦集計</a></li>
+    <li><a href="#month">月の切り替え</a></li>
+    <li><a href="#multi-user">複数人で使う</a></li>
+    <li><a href="#data">データの安全性</a></li>
+    <li><a href="#codes">シフト記号の意味</a></li>
+    <li><a href="#trouble">トラブル時の対処</a></li>
+    <li><a href="#faq">よくある質問</a></li>
+  </ol>
+</div>
+
+<!-- ========== ABOUT ========== -->
+<section id="about">
+  <h2 class="section-title">ShiftMaker とは</h2>
+  <p>
+    <strong>看護師の月間シフト表を、自動で作成するアプリ</strong>です。
+    スタッフを登録し、希望休や有給を入力すると、
+    AI が「夜勤の翌日は明け」「夜勤回数の上限」などのルールを満たす最適なシフトを生成します。
+    手作業だと数時間かかる月間シフトが、数分で組み上がります。
+  </p>
+  <h3>こんな人におすすめ</h3>
+  <ul>
+    <li>毎月のシフト作成を任されている看護師長・主任の方</li>
+    <li>夜勤・日勤・有給のバランスを公平に組みたい方</li>
+    <li>Excel での手作業からそろそろ脱却したい方</li>
+  </ul>
+  <h3>主な特長</h3>
+  <ul>
+    <li><strong>自動最適化</strong> — 5〜55秒でシフト生成</li>
+    <li><strong>スマホ完全対応</strong> — どこからでも編集可能</li>
+    <li><strong>ユーザーごとにデータ分離</strong> — 他人にデータが見えない</li>
+    <li><strong>データはあなたのスマホ内のみ</strong> — サーバには一切保存されない</li>
+    <li><strong>無料</strong> — 月額0円</li>
+  </ul>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== ACCESS ========== -->
+<section id="access">
+  <h2 class="section-title">スマホ・PC でアクセスする</h2>
+  <p>
+    ShiftMaker はインストール不要のウェブアプリです。<strong>ブラウザで URL を開くだけ</strong>で使えます。
+  </p>
+  <div class="info-box">
+    <div class="box-title">🔗 公開 URL</div>
+    <code>https://shiftmaker-s6fs.onrender.com</code>
+    <p style="margin-top: 8px; font-size: 13px; color: var(--text-soft);">
+      ※ URL が変わった場合は管理者にご確認ください
+    </p>
+  </div>
+
+  <h3>スマホでのアクセス手順</h3>
+  <ol class="step-list">
+    <li><strong>Safari（iPhone）または Chrome（Android）を開く</strong></li>
+    <li>アドレスバーに上記 URL を入力、または LINE などで共有されたリンクをタップ</li>
+    <li>「ワークスペース作成」画面が表示されれば成功</li>
+  </ol>
+
+  <h3>PC でのアクセス手順</h3>
+  <ol class="step-list">
+    <li>Chrome、Edge、Safari、Firefox など、好きなブラウザを開く</li>
+    <li>同じ URL を入力</li>
+    <li>同じ画面が表示されます（PCの方が画面が広くて編集しやすい場合があります）</li>
+  </ol>
+
+  <div class="warn-box">
+    <div class="box-title">⚠️ 初回アクセスは時間がかかります</div>
+    <p style="margin: 0; font-size: 14px;">
+      15分以上誰もアクセスしていない場合、サーバが「スリープ」状態になっています。
+      最初の人がアクセスすると <strong>30〜60秒間、真っ白な画面のまま</strong>になります。
+      その間に閉じてしまうと永遠に開きません。<strong>焦らず1分待ってください</strong>。
+    </p>
+  </div>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== INSTALL ========== -->
+<section id="install">
+  <h2 class="section-title">ホーム画面に追加（アプリ化）</h2>
+  <p>
+    URLをブックマークするより、<strong>スマホのホーム画面にアイコンを追加</strong>すると、
+    通常のアプリのように1タップで起動できて便利です。
+  </p>
+
+  <h3>iPhone（Safari）の場合</h3>
+  <ol class="step-list">
+    <li>Safari で ShiftMaker を開く</li>
+    <li>画面下部の <strong>共有ボタン</strong>（四角に上向き矢印 <code>□↑</code>）をタップ</li>
+    <li>メニューが出るので、下にスクロールして <strong>「ホーム画面に追加」</strong>をタップ</li>
+    <li>名前を確認して <strong>「追加」</strong>をタップ</li>
+    <li>ホーム画面に ShiftMaker のアイコンが追加されます</li>
+  </ol>
+
+  <h3>Android（Chrome）の場合</h3>
+  <ol class="step-list">
+    <li>Chrome で ShiftMaker を開く</li>
+    <li>画面右上の <strong>「︙」</strong>（縦三点リーダー）をタップ</li>
+    <li>メニューから <strong>「ホーム画面に追加」</strong>または<strong>「アプリをインストール」</strong>を選ぶ</li>
+    <li>名前を確認して <strong>「追加」</strong>をタップ</li>
+    <li>ホーム画面にアイコンが追加されます</li>
+  </ol>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== WORKSPACE ========== -->
+<section id="workspace">
+  <h2 class="section-title">ワークスペースを作る</h2>
+  <p>
+    ワークスペースは「あなた専用のデータ保管箱」です。
+    他の人と同じ URL を使っていても、ワークスペースが違えばお互いのデータは見えません。
+  </p>
+
+  <h3>初回アクセス時</h3>
+  <ol class="step-list">
+    <li>URL を開くと、最初に「<strong>ワークスペース作成画面</strong>」が表示されます</li>
+    <li><strong>名前</strong>を入力します（例：「自分用」「内科病棟」「3階A病棟」など）
+      <div style="font-size: 13px; color: var(--text-soft); margin-top: 4px;">
+        ※ あとから変更はできません。短くて分かりやすい名前にしましょう
+      </div>
+    </li>
+    <li>必要なら <strong>PIN コード</strong>を入力（任意。後述）</li>
+    <li><strong>「作成して開く」</strong>をタップ</li>
+    <li>メイン画面が表示されます。次は「使い方ガイド」と「始める」のどちらかをタップ</li>
+  </ol>
+
+  <h3>2回目以降のアクセス時</h3>
+  <ol class="step-list">
+    <li>URL を開くと、ワークスペース一覧が表示されます</li>
+    <li>自分が作成したワークスペースをタップ</li>
+    <li>PINコードを設定していた場合は入力</li>
+    <li>メイン画面が開きます</li>
+  </ol>
+
+  <div class="info-box">
+    <div class="box-title">💡 同じスマホで複数のワークスペースを使える</div>
+    <p style="margin: 0;">
+      ご家族や同僚と1台のスマホを共有する場合、それぞれが自分のワークスペースを作れます。
+      画面右上の「<strong>👤名前</strong>」ボタンから切り替え可能です。
+    </p>
+  </div>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== PIN ========== -->
+<section id="pin">
+  <h2 class="section-title">PIN コードについて</h2>
+  <p>
+    ワークスペース作成時に任意で設定できる、ご自身用の暗証番号です。
+  </p>
+
+  <h3>設定するメリット</h3>
+  <ul>
+    <li>スマホを他人が触ってもデータが見られない</li>
+    <li>スマホを紛失した場合の保険になる</li>
+    <li>家族と1台を共有していても、お互いのデータを保護できる</li>
+  </ul>
+
+  <h3>注意点</h3>
+  <div class="danger-box">
+    <div class="box-title">🚨 PIN を忘れると復旧できません</div>
+    <p style="margin: 0;">
+      PIN は安全のため <strong>暗号化（ハッシュ化）</strong>されて保存されており、
+      開発者でも復号できません。忘れた場合は <strong>そのワークスペースを削除して作り直す</strong>しかなく、
+      中のデータは失われます。
+      <br><br>
+      <strong>覚えやすく、忘れにくい4〜6桁の数字</strong>がおすすめです。
+      （例：誕生日の月日、よく使う数字の組み合わせ）
+    </p>
+  </div>
+
+  <h3>PIN 入力のタイミング</h3>
+  <p>
+    タブを閉じて再度開くたびに、PIN の入力が必要です。
+    タブを開いたままなら再入力は不要です。
+  </p>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== FLOW ========== -->
+<section id="flow">
+  <h2 class="section-title">全体の流れ（7ステップ）</h2>
+  <p>
+    シフトを1ヶ月分作るまでの流れです。<strong>初回は20〜30分、慣れれば5〜10分</strong>で完了します。
+  </p>
+
+  <div class="mock">
+    <div class="mock-bar">
+      <span>📅 ShiftMaker</span>
+      <span class="right">2026年5月</span>
+    </div>
+    <div class="mock-content">
+      <span class="mock-tab active">①スタッフ管理</span>
+      <span class="mock-tab">②希望入力</span>
+      <span class="mock-tab">③イベント</span>
+      <span class="mock-tab">④日別条件</span>
+      <span class="mock-tab">⑤シフト表</span>
+      <span class="mock-tab">⑥集計</span>
+      <span class="mock-btn">シフト生成</span>
+    </div>
+  </div>
+
+  <ol class="step-list">
+    <li><strong>①スタッフ管理</strong>: 勤務するスタッフを全員登録（最初の1回だけ）</li>
+    <li><strong>②希望入力</strong>: 各スタッフの希望休・有給を入力</li>
+    <li><strong>③イベント</strong>: 会議・研修など特別な日を登録（任意）</li>
+    <li><strong>④日別条件</strong>: 各日の必要人数を調整（基本は初期値のままでOK）</li>
+    <li><strong>右上「シフト生成」</strong>: ボタンを押して数十秒待つ</li>
+    <li><strong>⑤シフト表</strong>: 生成された結果を確認、必要なら手動修正</li>
+    <li><strong>⑥集計</strong>: 各スタッフの夜勤回数・休日日数を確認</li>
+  </ol>
+
+  <div class="success-box">
+    <div class="box-title">✅ 2ヶ月目以降は楽になります</div>
+    <p style="margin: 0;">
+      スタッフ情報は保存されているので、毎月は「希望入力 → 生成」だけで済みます。
+    </p>
+  </div>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== STAFF ========== -->
+<section id="staff">
+  <h2 class="section-title">①スタッフ管理</h2>
+  <p>
+    シフトに入れる全スタッフを登録します。<strong>初回は時間がかかりますが、一度登録すれば翌月以降は不要</strong>です。
+  </p>
+
+  <div class="success-box">
+    <div class="box-title">⚡ おすすめ: 「まとめて追加」で時間短縮</div>
+    <p style="margin: 0;">
+      初回は全員分の名前を入れるのが面倒です。
+      <strong>「まとめて追加」</strong>機能を使うと、役職と人数を指定するだけで
+      「看護師1, 看護師2, 看護師3 ...」と暫定的な名前で一気に登録できます。
+      本名はあとで1人ずつタップして書き換えれば OK。
+      役職ごとに繰り返せば、混在病棟も簡単に整います。
+    </p>
+  </div>
+
+  <h3>登録手順A: まとめて追加（おすすめ）</h3>
+  <ol class="step-list">
+    <li>下部タブから <strong>「①スタッフ」</strong>をタップ</li>
+    <li>画面上部の <strong>「⚡ まとめて追加」</strong>ボタンをタップ
+      <div style="font-size: 13px; color: var(--text-soft); margin-top: 4px;">
+        PC では「⚡ まとめて追加」タブを選択
+      </div>
+    </li>
+    <li>以下の項目を入力:
+      <ul style="margin-top: 8px;">
+        <li><strong>役職名</strong>: 例「看護師」「主任」「准看護師」</li>
+        <li><strong>人数</strong>: 例 8</li>
+        <li><strong>夜勤上限・連勤上限・夜勤可否</strong>を共通設定として指定</li>
+      </ul>
+    </li>
+    <li><strong>「○名 一括追加」</strong>ボタンをタップ → 看護師1〜看護師8 が登録されます</li>
+    <li>必要なら別の役職でもう一度繰り返し（主任2名など）</li>
+    <li>あとでスタッフカードをタップすると、暫定名から本名に編集できます</li>
+  </ol>
+
+  <h3>登録手順B: 1人ずつ追加</h3>
+  <ol class="step-list">
+    <li>下部タブから <strong>「①スタッフ」</strong>をタップ</li>
+    <li>画面上部の <strong>「+ 1名追加」</strong>ボタンをタップ</li>
+    <li>以下の項目を入力:
+      <ul style="margin-top: 8px;">
+        <li><strong>名前</strong>（必須）: 例「田中 花子」</li>
+        <li><strong>役職</strong>（任意）: 例「看護師」「主任」</li>
+        <li><strong>夜勤上限</strong>: 月に何回まで夜勤に入れるか（例 8）</li>
+        <li><strong>連続勤務上限</strong>: 何連勤までOKか（例 5）</li>
+        <li><strong>夜勤可能</strong>: チェックを外すと夜勤に入りません</li>
+      </ul>
+    </li>
+    <li><strong>「追加」</strong>ボタンをタップ</li>
+    <li>同じ手順で全員を登録</li>
+  </ol>
+
+  <h3>登録手順（PC）</h3>
+  <p>
+    画面上部にフォームが常時表示されています。
+    各欄を埋めて「追加」ボタンを押すと、下のリストに追加されます。
+  </p>
+
+  <h3>編集・削除</h3>
+  <ul>
+    <li><strong>編集</strong>: スマホは登録済みのカードをタップ。PCは「編集」ボタンをクリック</li>
+    <li><strong>削除</strong>: 「削除」ボタンを押すと確認ダイアログが出ます</li>
+  </ul>
+
+  <div class="warn-box">
+    <div class="box-title">⚠️ スタッフを削除するとそのスタッフの希望データも消えます</div>
+    <p style="margin: 0;">
+      間違って削除した場合は、もう一度登録し直して、希望も再入力する必要があります。
+    </p>
+  </div>
+
+  <h3>各項目の決め方</h3>
+  <h4>夜勤上限 (max_night)</h4>
+  <p>
+    1人あたりの月の夜勤回数の上限です。<strong>通常は 8 が目安</strong>。
+    全員を揃えるとシフトのバランスが良くなります。
+    <br>例: 月8回 × 夜勤可能スタッフ 5名 = 月40回の夜勤枠 → 1ヶ月(31日) × 2人 = 62回必要 → <strong>足りない</strong>
+  </p>
+  <h4>連続勤務上限 (max_consecutive_days)</h4>
+  <p>
+    何連勤までOKかの上限です。<strong>通常は 5 が目安</strong>。
+    5にすると、6連勤以上にペナルティが入り、可能な限り避けられます。
+  </p>
+  <h4>夜勤可能 (night_available)</h4>
+  <p>
+    日勤専従のスタッフ（管理職、夜勤免除中、など）はチェックを外します。
+  </p>
+
+  <div class="info-box">
+    <div class="box-title">💡 初心者向け：まずサンプルデータで試す</div>
+    <p style="margin: 0;">
+      ヘッダーまたは「…」メニューから <strong>「サンプル読込」</strong>を実行すると、
+      10名のスタッフと希望データが自動で入ります。
+      機能を試してから自分のデータに置き換えると分かりやすいです。
+    </p>
+  </div>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== WISH ========== -->
+<section id="wish">
+  <h2 class="section-title">②希望入力</h2>
+  <p>
+    各スタッフの「この日は休みたい」「この日は有給を取りたい」を入力します。
+  </p>
+
+  <h3>入力手順</h3>
+  <ol class="step-list">
+    <li>タブから <strong>「②希望」</strong>をタップ</li>
+    <li>画面上部のスタッフ一覧から、希望を入力したいスタッフをタップ
+      <div style="font-size: 13px; color: var(--text-soft); margin-top: 4px;">
+        ※ スマホでは横スクロールできます
+      </div>
+    </li>
+    <li>希望の種類を選ぶ:
+      <ul style="margin-top: 8px;">
+        <li><strong>希望休</strong>: 可能な限りこの日を休みにする</li>
+        <li><strong>有給</strong>: この日に有給を割り当てる（必ず）</li>
+      </ul>
+    </li>
+    <li>カレンダー上で <strong>希望の日付をタップ</strong></li>
+    <li>もう一度タップすると取り消しになります</li>
+    <li>別のスタッフに切り替えて、同じように入力</li>
+  </ol>
+
+  <div class="info-box">
+    <div class="box-title">💡 希望休と有給の違い</div>
+    <p style="margin: 0;">
+      <strong>希望休</strong>は「ソフト制約」です。可能な限り反映しますが、必要人数が足りない場合は通常の出勤になることがあります。<br>
+      <strong>有給</strong>は「ハード制約」です。必ずその日に Y（有給）が割り当てられます。
+      <br><br>
+      <strong>絶対に外せない予定（結婚式、検査など）は「有給」</strong>を選んでください。
+    </p>
+  </div>
+
+  <h3>大量入力のコツ</h3>
+  <ul>
+    <li>同じスタッフで連続して何日も指定できます（連休希望など）</li>
+    <li>「希望休」を選んだ状態で別のスタッフに切り替えても、設定は維持されます</li>
+    <li>カレンダーは月単位の表示なので、月をまたぐ希望は次月に切り替えて入力</li>
+  </ul>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== EVENT ========== -->
+<section id="event">
+  <h2 class="section-title">③イベント</h2>
+  <p>
+    会議・研修・行事など、<strong>特定のスタッフが必ず出勤する日</strong>や、
+    <strong>特定のスタッフが必ず休む日</strong>を登録します。任意のステップです。
+  </p>
+
+  <h3>こんなときに使います</h3>
+  <ul>
+    <li>月1回の病棟会議で主任は必ず出勤</li>
+    <li>新人研修の日は研修担当者2名が出勤</li>
+    <li>監査日は特定のメンバーがいる必要がある</li>
+    <li>勉強会の日は受講予定者を休みにしたい</li>
+  </ul>
+
+  <h3>登録手順</h3>
+  <ol class="step-list">
+    <li>タブから <strong>「③イベント」</strong>をタップ</li>
+    <li>カレンダー上で <strong>イベント開催日をタップ</strong></li>
+    <li>右側（スマホは下から出るパネル）でイベント情報を入力:
+      <ul style="margin-top: 8px;">
+        <li><strong>イベント名</strong>: 例「病棟会議」「新人研修」</li>
+        <li><strong>必須スタッフ</strong>: その日に必ず出勤する人を選択</li>
+        <li><strong>不可スタッフ</strong>: その日は必ず休みにする人を選択</li>
+      </ul>
+    </li>
+    <li><strong>「保存」</strong>をタップ</li>
+  </ol>
+
+  <div class="warn-box">
+    <div class="box-title">⚠️ イベントの制約は強力です</div>
+    <p style="margin: 0;">
+      必須/不可スタッフは <strong>必ず</strong> 反映されます。
+      矛盾がある（例：必須スタッフが希望休にも指定されている）と、
+      シフト生成が「実行不可能」になることがあります。
+    </p>
+  </div>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== CONDITION ========== -->
+<section id="condition">
+  <h2 class="section-title">④日別条件</h2>
+  <p>
+    各日に必要な日勤・夜勤の人数を設定します。<strong>初期値は日勤3名・夜勤2名</strong>。
+    特別な日（年末年始、繁忙日、閑散日）以外はそのままで構いません。
+  </p>
+
+  <h3>調整したいケース</h3>
+  <ul>
+    <li>土日は日勤2名で十分 → 該当日の日勤を 2 に変更</li>
+    <li>月末は忙しいので日勤4名にしたい → 月末の日勤を 4 に変更</li>
+    <li>年末年始は夜勤1名で運営 → 12/31、1/1 の夜勤を 1 に変更</li>
+  </ul>
+
+  <h3>変更手順</h3>
+  <ol class="step-list">
+    <li>タブから <strong>「④条件」</strong>をタップ</li>
+    <li>該当日の <strong>日勤・夜勤の数字</strong>をタップ</li>
+    <li><strong>「+」「−」ボタン</strong>で増減 または 数字を直接入力</li>
+    <li>変更は自動保存されます</li>
+  </ol>
+
+  <div class="info-box">
+    <div class="box-title">💡 必要人数 × 日数 ≤ スタッフ提供可能枠</div>
+    <p style="margin: 0;">
+      必要人数を増やしすぎると、生成が「実行不可能」になることがあります。
+      例：夜勤2名 × 31日 = 62回必要 → 夜勤可能スタッフ全員の上限合計が62以上必要。
+    </p>
+  </div>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== GENERATE ========== -->
+<section id="generate">
+  <h2 class="section-title">⑤シフト生成</h2>
+  <p>
+    準備が整ったら、いよいよシフトを自動生成します。
+  </p>
+
+  <h3>生成手順</h3>
+  <ol class="step-list">
+    <li>画面右上（スマホは上部中央）の <strong>「シフト生成」</strong>ボタンをタップ</li>
+    <li>生成中はボタンが「生成中...」に変わり、最大1分待ちます</li>
+    <li>完了すると自動で <strong>「⑤シフト表」</strong>タブに切り替わります</li>
+    <li>「シフトの生成が完了しました！」というメッセージが出ます</li>
+  </ol>
+
+  <div class="warn-box">
+    <div class="box-title">⏳ 生成中は画面を閉じないでください</div>
+    <p style="margin: 0;">
+      最大55秒かかります。スピナーが回っている間はそのまま待ってください。
+      閉じても問題はありませんが、結果が表示されません。
+    </p>
+  </div>
+
+  <h3>「実行不可能」と表示されたら</h3>
+  <p>
+    制約が厳しすぎて、ルールを満たすシフトが組めない状態です。次のいずれかを試してください:
+  </p>
+  <ol class="step-list">
+    <li><strong>夜勤可能スタッフを増やす</strong>（スタッフ管理で夜勤可能のチェックを増やす）</li>
+    <li><strong>夜勤上限を上げる</strong>（例 8 → 10）</li>
+    <li><strong>必要人数を減らす</strong>（日別条件で夜勤を 2 → 1 にするなど）</li>
+    <li><strong>有給を希望休に変更</strong>（有給は必ず割り当てなので、多すぎると人手不足に）</li>
+    <li><strong>イベントの必須/不可スタッフを見直す</strong></li>
+  </ol>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== TABLE ========== -->
+<section id="table">
+  <h2 class="section-title">⑥シフト表（確認・編集）</h2>
+  <p>
+    生成された1ヶ月分のシフトが表示されます。手動で修正することも可能です。
+  </p>
+
+  <h3>表示の見方</h3>
+  <ul>
+    <li>縦軸: スタッフ</li>
+    <li>横軸: 日付</li>
+    <li>各セル: シフトコード（D / N / A / O / Y）</li>
+    <li>色分けでひと目で分かるようになっています</li>
+  </ul>
+
+  <h3>スマホでの表示</h3>
+  <p>
+    画面が狭いため、デフォルトでは <strong>「個人別表示」</strong> になります。
+    1人分のシフトが大きく見やすく表示され、上下の矢印で前後のスタッフに切り替えられます。
+  </p>
+  <p>
+    上部の切替ボタンで「全体表示」に変えると、Excel風の全体表が見られます（横スクロール）。
+  </p>
+
+  <h3>手動編集</h3>
+  <ol class="step-list">
+    <li>変更したい <strong>セルをタップ</strong></li>
+    <li>シフトコードの選択肢（D / N / A / O / Y）が表示</li>
+    <li>変更したいコードをタップ</li>
+    <li>その場で反映されます（自動保存）</li>
+  </ol>
+
+  <div class="info-box">
+    <div class="box-title">💡 手動編集の用途</div>
+    <p style="margin: 0;">
+      自動生成された結果はベストではあっても完璧ではないことがあります。
+      「この人は今月忙しいから日勤に変えたい」「ここは別の人にしたい」など、
+      最終調整は手動で行うのが一般的です。
+    </p>
+  </div>
+
+  <div class="warn-box">
+    <div class="box-title">⚠️ 手動編集ではルールチェックされません</div>
+    <p style="margin: 0;">
+      自動生成では「夜勤→明け」のルールが守られますが、
+      手動で N（夜勤）を入れても次の日が自動で A（明け）にはなりません。
+      必要に応じて自分で調整してください。
+    </p>
+  </div>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== SUMMARY ========== -->
+<section id="summary">
+  <h2 class="section-title">⑦集計</h2>
+  <p>
+    各スタッフの月間サマリーを確認します。<strong>偏りがないかチェックする</strong>ためのページです。
+  </p>
+
+  <h3>表示される項目</h3>
+  <ul>
+    <li><strong>日勤(D)</strong>: 日勤の回数</li>
+    <li><strong>夜勤(N)</strong>: 夜勤の回数</li>
+    <li><strong>明け(A)</strong>: 明けの回数（夜勤と同じ数になります）</li>
+    <li><strong>休み(O)</strong>: 休日の回数</li>
+    <li><strong>有給(Y)</strong>: 有給の回数</li>
+  </ul>
+
+  <h3>確認ポイント</h3>
+  <ul>
+    <li>夜勤回数がスタッフ間で大きく偏っていないか</li>
+    <li>休日が極端に少ない人がいないか（通常は月8〜10日）</li>
+    <li>有給希望が反映されているか</li>
+  </ul>
+
+  <div class="info-box">
+    <div class="box-title">💡 偏りが気になったら</div>
+    <p style="margin: 0;">
+      シフト表に戻って手動で調整するか、
+      スタッフ管理で「夜勤上限」を調整して再生成してください。
+    </p>
+  </div>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== MONTH ========== -->
+<section id="month">
+  <h2 class="section-title">月の切り替え</h2>
+  <p>
+    複数月のシフトを管理できます。<strong>直近3ヶ月分が自動保存</strong>されます。
+  </p>
+
+  <h3>切り替え手順</h3>
+  <ol class="step-list">
+    <li>画面上部の <strong>年月セレクタ</strong>をタップ</li>
+    <li>表示したい月を選択</li>
+    <li>その月のスタッフ・希望・シフト表に切り替わります</li>
+  </ol>
+
+  <div class="info-box">
+    <div class="box-title">💡 前月の夜勤の引き継ぎ</div>
+    <p style="margin: 0;">
+      前月のシフトを生成しておくと、月末の夜勤が
+      <strong>翌月1日の「明け」として自動的に引き継がれます</strong>。
+      連続夜勤が月をまたぐ場合も正しく処理されます。
+    </p>
+  </div>
+
+  <div class="warn-box">
+    <div class="box-title">⚠️ 4ヶ月以上前のデータは自動削除されます</div>
+    <p style="margin: 0;">
+      端末の容量を節約するため、直近3ヶ月分のみ保存されます。
+      古いシフト表はスクリーンショットなどで残しておくと安心です。
+    </p>
+  </div>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== MULTI-USER ========== -->
+<section id="multi-user">
+  <h2 class="section-title">複数人で使う</h2>
+  <p>
+    複数のスタッフ・複数の病棟が、同じURLでそれぞれ独立して使えます。
+  </p>
+
+  <h3>パターン1: それぞれが自分のスマホで使う</h3>
+  <ol class="step-list">
+    <li>使う人全員に URL を共有（LINE、メール等）</li>
+    <li>各自が自分のスマホでアクセスし、自分用のワークスペースを作成</li>
+    <li><strong>お互いのデータは見えません</strong>（端末ごとに完全独立）</li>
+  </ol>
+
+  <h3>パターン2: 1台のスマホを複数人で共有</h3>
+  <ol class="step-list">
+    <li>1台のスマホで、人数分のワークスペースを作成</li>
+    <li>各自に <strong>PINコードを設定</strong>させる（覗き見防止）</li>
+    <li>使い終わったら画面右上の <strong>「👤名前」</strong>ボタンから切替</li>
+  </ol>
+
+  <h3>ワークスペースの切替方法</h3>
+  <h4>PC・タブレット</h4>
+  <p>
+    画面左上の「<strong>👤ワークスペース名</strong>」ボタンをクリック → 確認 → 切替画面に戻ります。
+  </p>
+  <h4>スマホ</h4>
+  <p>
+    画面右上の <strong>「⋯」</strong>（三点リーダー）をタップ → メニューから <strong>「ワークスペース切替」</strong>を選択。
+  </p>
+
+  <div class="danger-box">
+    <div class="box-title">🚨 同じワークスペースを複数端末で開かないでください</div>
+    <p style="margin: 0;">
+      データはサーバに保存されないため、複数端末で同じ作業をすると、
+      最後に保存した方だけが残ります（同期されません）。
+      1ワークスペース = 1端末で使ってください。
+    </p>
+  </div>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== DATA ========== -->
+<section id="data">
+  <h2 class="section-title">データの安全性</h2>
+
+  <h3>Q. スタッフの名前など個人情報は安全ですか？</h3>
+  <p>
+    はい、安全です。<strong>すべてのデータはあなたのスマホのブラウザ内にのみ保存</strong>され、
+    サーバには一切送信されません。
+  </p>
+
+  <h3>Q. 通信は暗号化されていますか？</h3>
+  <p>
+    はい。URLは <strong>HTTPS</strong>（暗号化通信）で配信されています。
+    シフト生成のときだけサーバと通信しますが、生成結果を受け取った後にデータは破棄され、サーバには残りません。
+  </p>
+
+  <h3>Q. 他人にデータが見られることはありますか？</h3>
+  <p>
+    通常はありません。ただし以下の場合は注意:
+  </p>
+  <ul>
+    <li>スマホをロックしないで他人に渡した場合 → 中を見られる可能性があります（PINコード設定推奨）</li>
+    <li>同じスマホで別のワークスペースを作った人 → ワークスペースが違えば見えません</li>
+    <li>ブラウザのプライベートブラウジングを使った場合 → タブを閉じると全データ消失</li>
+  </ul>
+
+  <h3>Q. データを完全に消したい</h3>
+  <ol class="step-list">
+    <li>初期画面（ワークスペース一覧）に戻る</li>
+    <li>削除したいワークスペースの <strong>「×」</strong>ボタンをタップ</li>
+    <li>確認ダイアログで「OK」を押す</li>
+    <li>そのワークスペースのデータはすべて消去されます</li>
+  </ol>
+
+  <h3>Q. 機種変更したらデータはどうなる？</h3>
+  <p>
+    <strong>現在、データの移行機能はありません。</strong>新しい端末でゼロから作り直しになります。
+    どうしても引き継ぎたい場合は、スクリーンショットでシフト表を残しておくのが現実的です。
+    将来、エクスポート/インポート機能を追加する予定があります。
+  </p>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== CODES ========== -->
+<section id="codes">
+  <h2 class="section-title">シフト記号の意味</h2>
+  <p>
+    シフト表に表示される記号と、その意味・ルールです。
+  </p>
+  <table class="codes-table">
+    <thead>
+      <tr>
+        <th>記号</th>
+        <th>意味</th>
+        <th>ルール</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="chip d">D</span></td>
+        <td><strong>日勤</strong></td>
+        <td>通常の昼間勤務</td>
+      </tr>
+      <tr>
+        <td><span class="chip n">N</span></td>
+        <td><strong>夜勤</strong></td>
+        <td>夜間勤務。翌日は必ず A（明け）になる</td>
+      </tr>
+      <tr>
+        <td><span class="chip a">A</span></td>
+        <td><strong>明け</strong></td>
+        <td>夜勤明け。前日は必ず N、翌日は休みになりやすい</td>
+      </tr>
+      <tr>
+        <td><span class="chip o">O</span></td>
+        <td><strong>休み</strong></td>
+        <td>通常の休日</td>
+      </tr>
+      <tr>
+        <td><span class="chip y">Y</span></td>
+        <td><strong>有給</strong></td>
+        <td>希望入力で指定した日にのみ割り当てられる</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>夜勤の特別ルール</h3>
+  <p>
+    夜勤（N）は単独では入りません。<strong>必ず「N → A」の2日セット</strong>です:
+  </p>
+  <ul>
+    <li>1日目: <span class="chip n" style="width:24px;height:24px;font-size:11px;">N</span>（夜勤）</li>
+    <li>2日目: <span class="chip a" style="width:24px;height:24px;font-size:11px;">A</span>（明け）</li>
+    <li>3日目: <span class="chip o" style="width:24px;height:24px;font-size:11px;">O</span>（休み）になりやすい</li>
+  </ul>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== TROUBLE ========== -->
+<section id="trouble">
+  <h2 class="section-title">トラブル時の対処</h2>
+
+  <h3>画面が真っ白で動かない</h3>
+  <p>
+    <strong>サーバが起き上がっている最中です。</strong>
+    無料プランの仕様で、15分間誰もアクセスしないとサーバがスリープします。
+    最初の人がアクセスすると30〜60秒かかります。<strong>閉じずに1分待ってください</strong>。
+  </p>
+
+  <h3>「シフト生成」ボタンを押しても何も起きない</h3>
+  <ul>
+    <li>スタッフが0人だと押せません（グレーアウト）→ スタッフ管理で1人以上登録</li>
+    <li>生成中は最大1分の応答時間です → スピナーが回っているか確認</li>
+    <li>それでも動かない場合 → ブラウザを再読込（プルダウンで更新）</li>
+  </ul>
+
+  <h3>「実行不可能」と表示される</h3>
+  <p>制約が厳しすぎる状態です。次のいずれかを試してください:</p>
+  <ul>
+    <li>夜勤可能スタッフを増やす</li>
+    <li>夜勤上限を上げる（8→10など）</li>
+    <li>日別条件で必要人数を減らす</li>
+    <li>有給希望を希望休に変える</li>
+    <li>イベントの必須/不可スタッフを見直す</li>
+  </ul>
+
+  <h3>データが消えた・違うデータが表示される</h3>
+  <ul>
+    <li>違うワークスペースを開いていないか確認（画面右上の名前を見る）</li>
+    <li>ブラウザの履歴・キャッシュを削除した場合 → データは完全に消えています</li>
+    <li>プライベートブラウジングモードで使った場合 → タブを閉じると消えます。通常モードで開き直す</li>
+  </ul>
+
+  <h3>ホーム画面のアイコンから開くと表示がおかしい</h3>
+  <p>
+    通常のブラウザから開き直してみてください。<strong>iPhone の Safari の「ホームに追加」</strong>は、
+    タブとは別の領域でデータを保持する場合があります。
+  </p>
+
+  <h3>PIN を忘れた</h3>
+  <p>
+    残念ですが、PINは暗号化されており復旧できません。
+    そのワークスペースを <strong>削除して作り直す</strong>必要があります（データは失われます）。
+  </p>
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<!-- ========== FAQ ========== -->
+<section id="faq">
+  <h2 class="section-title">よくある質問</h2>
+
+  <details class="faq">
+    <summary>無料で使い続けられますか？</summary>
+    <p>はい。完全無料です。ただし、サーバの無料プランは15分アクセスが無いとスリープし、次回起動に30〜60秒かかります。これがどうしても気になる場合は有料プラン化を相談してください。</p>
+  </details>
+
+  <details class="faq">
+    <summary>iPad でも使えますか？</summary>
+    <p>はい。Safari や Chrome で同じ URL を開いてください。タブレットは画面が広いため、スマホよりも編集が快適です。</p>
+  </details>
+
+  <details class="faq">
+    <summary>パソコンとスマホで同じデータを見られますか？</summary>
+    <p>いいえ。データは端末ごとに独立しています。両方で使う場合は、それぞれのワークスペースを作るか、いつもどちらか一方で使ってください。</p>
+  </details>
+
+  <details class="faq">
+    <summary>同じスマホで2人分のシフトを管理できますか？</summary>
+    <p>はい。<strong>ワークスペースを2つ作る</strong>と、それぞれが独立したデータを持てます。画面右上の「👤名前」ボタンから切り替えてください。</p>
+  </details>
+
+  <details class="faq">
+    <summary>生成結果が気に入りません</summary>
+    <p>同じ条件で再生成しても、ほぼ同じ結果が出ます。希望や夜勤上限を少し変えて再生成するか、シフト表の手動編集で調整してください。</p>
+  </details>
+
+  <details class="faq">
+    <summary>夜勤回数が偏ります</summary>
+    <p>全員の「夜勤上限」を同じ数字に揃えると、バランスが良くなります。例：全員 max_night=8。</p>
+  </details>
+
+  <details class="faq">
+    <summary>3交代制（早番・遅番・夜勤）に対応していますか？</summary>
+    <p>現状は2交代（日勤・夜勤）対応です。3交代対応は将来のアップデート予定です。</p>
+  </details>
+
+  <details class="faq">
+    <summary>シフトを印刷したい</summary>
+    <p>シフト表のページをブラウザの印刷機能で印刷できます（横向きA4推奨）。スクリーンショットを保存するのも便利です。</p>
+  </details>
+
+  <details class="faq">
+    <summary>Excel に出力できますか？</summary>
+    <p>現状は対応していません。要望が多ければ追加します。</p>
+  </details>
+
+  <details class="faq">
+    <summary>サンプル読込はどう使いますか？</summary>
+    <p>機能を試したいときに使います。10名のスタッフと希望データが自動で入ります。試した後で「全消去」してから自分のデータを入れ直してください。</p>
+  </details>
+
+  <details class="faq">
+    <summary>全消去ボタンを押したらどうなる？</summary>
+    <p>そのワークスペース内の<strong>すべての情報（スタッフ・希望・シフト表）が消えます</strong>。確認ダイアログで「OK」を押すまで実行されません。</p>
+  </details>
+
+  <details class="faq">
+    <summary>困ったときの連絡先は？</summary>
+    <p>このアプリの管理者にご連絡ください。バグ報告や機能要望は喜んでお受けします。</p>
+  </details>
+
+  <a href="#" class="toc-back">↑ 目次に戻る</a>
+</section>
+
+<footer>
+  ShiftMaker 使い方ガイド &copy; 2026
+</footer>
+
+</div>
+</body>
+</html>
