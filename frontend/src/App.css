@@ -1143,17 +1143,20 @@ tr:hover td {
 }
 
 .shift-popover-btn {
-  width: 38px;
+  min-width: 48px;
   height: 38px;
+  padding: 0 10px;
   border: none;
   border-radius: 8px;
   color: white;
-  font-weight: 800;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
   cursor: pointer;
   transition: transform 0.1s, box-shadow 0.1s;
   touch-action: manipulation;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .shift-popover-btn:hover {
@@ -2303,23 +2306,47 @@ tr:hover td {
   font-weight: 700;
 }
 
-.personal-view-list {
+/* Personal view: 7-column calendar layout */
+.personal-calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.personal-calendar-header {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 8px;
-  padding: 0;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.personal-cal-head {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 4px 0;
+}
+
+.personal-cal-head.sunday { color: #E53935; }
+.personal-cal-head.saturday { color: #1976D2; }
+
+.personal-calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
 }
 
 .personal-day-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px 12px;
+  padding: 8px 6px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   cursor: default;
   transition: box-shadow 0.15s;
+  min-height: 80px;
 }
 
 .personal-day-card:hover {
@@ -2330,37 +2357,36 @@ tr:hover td {
 .personal-day-card.saturday { border-left: 3px solid #1976D2; }
 .personal-day-card.has-wish { outline: 2px dashed #FF7043; }
 
+.personal-day-card.empty {
+  visibility: hidden;
+  pointer-events: none;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
 .personal-day-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .personal-day-num {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1;
 }
 
-.personal-day-weekday {
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-
-.personal-day-weekday.sunday { color: #E53935; }
-.personal-day-weekday.saturday { color: #1976D2; }
-
-.personal-day-shift {
-  font-size: 22px;
+.personal-day-shift-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
   font-weight: 800;
   text-align: center;
   padding: 4px 0;
-}
-
-.personal-day-label {
-  font-size: 10px;
-  color: var(--text-secondary);
-  text-align: center;
+  letter-spacing: 0.04em;
 }
 
 .personal-day-wish {
@@ -2369,7 +2395,6 @@ tr:hover td {
   border-radius: 4px;
   color: white;
   text-align: center;
-  margin-top: 2px;
 }
 
 @media (max-width: 768px) {
@@ -2573,9 +2598,10 @@ tr:hover td {
     gap: 8px;
   }
   .shift-popover-btn {
-    width: 44px;
+    min-width: 54px;
     height: 44px;
-    font-size: 16px;
+    padding: 0 12px;
+    font-size: 14px;
     border-radius: 10px;
   }
 
@@ -2608,16 +2634,20 @@ tr:hover td {
     letter-spacing: 0;
   }
 
-  /* Personal view — better layout */
-  .personal-view-list {
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 6px;
-    padding: 12px 0;
+  /* Personal view — tighter on mobile */
+  .personal-calendar-header,
+  .personal-calendar-week {
+    gap: 3px;
   }
-
   .personal-day-card {
-    padding: 8px 10px;
+    padding: 5px 3px;
+    min-height: 64px;
+    border-radius: 6px;
   }
+  .personal-day-num { font-size: 12px; }
+  .personal-day-shift-name { font-size: 12px; padding: 2px 0; }
+  .personal-day-wish { font-size: 9px; padding: 1px 4px; }
+  .personal-cal-head { font-size: 11px; }
 
   .personal-view-selector {
     padding: 10px 0;
@@ -2672,13 +2702,13 @@ tr:hover td {
     padding: 4px 2px;
   }
 
-  .personal-view-list {
-    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
-    gap: 5px;
+  .personal-calendar-header,
+  .personal-calendar-week {
+    gap: 2px;
   }
-
-  .personal-day-num { font-size: 15px; }
-  .personal-day-shift { font-size: 18px; }
+  .personal-day-card { min-height: 56px; padding: 3px 2px; }
+  .personal-day-num { font-size: 11px; }
+  .personal-day-shift-name { font-size: 11px; letter-spacing: 0; }
 
   .summary-cards {
     grid-template-columns: 1fr 1fr;

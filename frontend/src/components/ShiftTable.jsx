@@ -125,63 +125,99 @@ function PersonalView({ staff, schedule, days, shiftColorMap, wishes, year, mont
   const stats = {
     D: shifts.filter((s) => s === 'D').length,
     N: shifts.filter((s) => s === 'N').length,
+    A: shifts.filter((s) => s === 'A').length,
     O: shifts.filter((s) => s === 'O').length,
+    Y: shifts.filter((s) => s === 'Y').length,
+  }
+
+  // Build calendar weeks (7-col layout starting Sunday)
+  const firstDayOfWeek = new Date(year, month - 1, 1).getDay()
+  const cells = []
+  for (let i = 0; i < firstDayOfWeek; i++) cells.push(null)
+  days.forEach((d) => cells.push(d))
+  while (cells.length % 7 !== 0) cells.push(null)
+  const weeks = []
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))
+
+  const wishColor = (wishType) => {
+    if (wishType === '有給') return '#2196F3'
+    if (wishType === '出勤') return '#22863a'
+    return '#FF7043'
   }
 
   return (
     <div className="personal-view">
-      {/* Staff selector - prev/next on mobile */}
+      {/* Staff selector - prev/next */}
       <div className="personal-nav">
         <button className="personal-nav-btn" onClick={goPrev}>&lt;</button>
         <div className="personal-nav-center">
           <span className="personal-nav-name">{selectedStaff?.name || '-'}</span>
           {selectedStaff?.role && <span className="personal-nav-role">{selectedStaff.role}</span>}
           <div className="personal-nav-stats">
-            <span style={{ color: shiftColorMap.D || '#4CAF50' }}>D:{stats.D}</span>
-            <span style={{ color: shiftColorMap.N || '#9C27B0' }}>N:{stats.N}</span>
-            <span style={{ color: shiftColorMap.O || '#9E9E9E' }}>O:{stats.O}</span>
+            <span style={{ color: shiftColorMap.D || '#4CAF50' }}>日勤 {stats.D}</span>
+            <span style={{ color: shiftColorMap.N || '#9C27B0' }}>夜勤 {stats.N}</span>
+            <span style={{ color: shiftColorMap.A || '#FF9800' }}>明け {stats.A}</span>
+            <span style={{ color: shiftColorMap.O || '#9E9E9E' }}>休み {stats.O}</span>
+            {stats.Y > 0 && (
+              <span style={{ color: shiftColorMap.Y || '#2196F3' }}>有給 {stats.Y}</span>
+            )}
           </div>
         </div>
         <button className="personal-nav-btn" onClick={goNext}>&gt;</button>
       </div>
-      {/* Day cards */}
-      <div className="personal-view-list">
-        {days.map(({ day, date, weekday }) => {
-          const shiftCode = staffSchedule[date] || '-'
-          const color = shiftColorMap[shiftCode]
-          const wish = wishes.find((w) => w.staff_id === selectedStaffId && w.date === date)
-          const isSunday = weekday === 0
-          const isSaturday = weekday === 6
-          return (
+
+      {/* Calendar grid: 7 columns, week-by-week */}
+      <div className="personal-calendar">
+        <div className="personal-calendar-header">
+          {DAY_NAMES_SHORT.map((name, i) => (
             <div
-              key={date}
-              className={`personal-day-card ${isSunday ? 'sunday' : ''} ${isSaturday ? 'saturday' : ''} ${wish ? 'has-wish' : ''}`}
-              style={color ? { borderTop: `3px solid ${color}`, background: `${color}10` } : {}}
+              key={i}
+              className={`personal-cal-head ${i === 0 ? 'sunday' : i === 6 ? 'saturday' : ''}`}
             >
-              <div className="personal-day-header">
-                <span className="personal-day-num">{day}</span>
-                <span className={`personal-day-weekday ${isSunday ? 'sunday' : ''} ${isSaturday ? 'saturday' : ''}`}>
-                  {DAY_NAMES_SHORT[weekday]}
-                </span>
-              </div>
-              <div
-                className="personal-day-shift"
-                style={{ color: color || 'var(--text-secondary)' }}
-              >
-                {shiftCode}
-              </div>
-              <div className="personal-day-label">{SHIFT_NAMES[shiftCode] || ''}</div>
-              {wish && (
-                <div
-                  className="personal-day-wish"
-                  style={{ backgroundColor: wish.type === '有給' ? '#2196F3' : '#FF7043' }}
-                >
-                  {wish.type}
-                </div>
-              )}
+              {name}
             </div>
-          )
-        })}
+          ))}
+        </div>
+        {weeks.map((week, wi) => (
+          <div key={wi} className="personal-calendar-week">
+            {week.map((cell, di) => {
+              if (cell === null) {
+                return <div key={`empty-${wi}-${di}`} className="personal-day-card empty" />
+              }
+              const { day, date, weekday } = cell
+              const shiftCode = staffSchedule[date] || '-'
+              const color = shiftColorMap[shiftCode]
+              const wish = wishes.find((w) => w.staff_id === selectedStaffId && w.date === date)
+              const isSunday = weekday === 0
+              const isSaturday = weekday === 6
+              return (
+                <div
+                  key={date}
+                  className={`personal-day-card ${isSunday ? 'sunday' : ''} ${isSaturday ? 'saturday' : ''} ${wish ? 'has-wish' : ''}`}
+                  style={color ? { borderTop: `3px solid ${color}`, background: `${color}10` } : {}}
+                >
+                  <div className="personal-day-header">
+                    <span className="personal-day-num">{day}</span>
+                  </div>
+                  <div
+                    className="personal-day-shift-name"
+                    style={{ color: color || 'var(--text-secondary)' }}
+                  >
+                    {SHIFT_NAMES[shiftCode] || '-'}
+                  </div>
+                  {wish && (
+                    <div
+                      className="personal-day-wish"
+                      style={{ backgroundColor: wishColor(wish.type) }}
+                    >
+                      {wish.type}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -292,7 +328,7 @@ export default function ShiftTable() {
                 onClick={() => handleShiftChange(editingCell.staffId, editingCell.date, code)}
                 title={SHIFT_NAMES[code]}
               >
-                {code}
+                {SHIFT_NAMES[code]}
               </button>
             )
           })}
