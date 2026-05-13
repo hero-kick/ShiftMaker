@@ -8,12 +8,16 @@
   :root {
     --primary: #4a90e2;
     --primary-dark: #357abd;
-    --bg-dark: #1a2332;
+    --primary-glow: rgba(74,144,226,0.4);
+    --bg-dark: #0d1421;
     --bg-slide: #f5f7fa;
-    --text: #2c3e50;
+    --text: #1a2332;
     --text-soft: #5a6a7a;
     --text-muted: #7a8a9a;
     --border: #e2e8f0;
+    --accent-red: #e74c3c;
+    --accent-green: #27ae60;
+    --accent-amber: #f39c12;
     --d-shift: #4CAF50;
     --n-shift: #9C27B0;
     --a-shift: #FF9800;
@@ -27,8 +31,8 @@
     background: var(--bg-dark);
     font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
     color: var(--text);
+    -webkit-font-smoothing: antialiased;
   }
-  /* Stage */
   #stage {
     position: relative;
     width: 100vw;
@@ -43,8 +47,13 @@
     justify-content: center;
     padding: 4vh 5vw;
     background: var(--bg-slide);
+    animation: slideIn 0.5s ease;
   }
   .slide.active { display: flex; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   .slide-inner {
     width: 100%;
     max-width: 1280px;
@@ -54,52 +63,105 @@
     flex-direction: column;
   }
 
-  /* Title slide */
-  .slide-title {
-    background: linear-gradient(135deg, #4a90e2 0%, #2c5fa5 100%);
+  /* === Hero slides === */
+  .slide-hero {
+    background: linear-gradient(135deg, #0d1421 0%, #1e3a5f 50%, #2c5fa5 100%);
     color: #fff;
+    overflow: hidden;
   }
-  .title-content {
+  .slide-hero::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(74,144,226,0.3), transparent 70%);
+    top: -200px; right: -200px;
+    border-radius: 50%;
+  }
+  .slide-hero::after {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(76,175,80,0.15), transparent 70%);
+    bottom: -100px; left: -100px;
+    border-radius: 50%;
+  }
+  .hero-content {
     text-align: center;
     width: 100%;
+    position: relative;
+    z-index: 1;
   }
-  .title-icon { font-size: 96px; margin-bottom: 16px; }
-  .title-main { font-size: 72px; font-weight: 800; margin-bottom: 8px; letter-spacing: 0.02em; }
-  .title-sub { font-size: 24px; opacity: 0.92; margin-bottom: 48px; }
-  .title-meta {
-    display: inline-block;
-    padding: 10px 24px;
-    background: rgba(255,255,255,0.18);
-    border-radius: 8px;
-    font-size: 15px;
+  .hero-eyebrow {
+    color: rgba(255,255,255,0.7);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    margin-bottom: 24px;
+  }
+  .hero-icon { font-size: 80px; margin-bottom: 20px; }
+  .hero-main {
+    font-size: 96px;
+    font-weight: 900;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #ffffff, #b3d9ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    font-size: 32px;
+    opacity: 0.95;
+    margin-bottom: 48px;
+    font-weight: 300;
+  }
+  .hero-tagline {
+    font-size: 20px;
+    color: #b3d9ff;
+    font-weight: 500;
     letter-spacing: 0.05em;
   }
 
-  /* Common slide head */
-  .s-head {
-    margin-bottom: 28px;
+  /* === Pain slide === */
+  .slide-pain {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d1f1f 100%);
+    color: #fff;
   }
+  .pain-quote {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.4;
+    max-width: 900px;
+    text-align: center;
+    margin: 0 auto;
+  }
+  .pain-quote .red { color: #ff6b6b; }
+  .pain-quote .small { font-size: 22px; opacity: 0.7; display: block; margin-top: 30px; font-weight: 400; }
+
+  /* === Common === */
+  .s-head { margin-bottom: 28px; }
   .s-eyebrow {
     color: var(--primary);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
-    letter-spacing: 0.18em;
-    margin-bottom: 8px;
+    letter-spacing: 0.2em;
+    margin-bottom: 10px;
   }
   .s-title {
-    font-size: 38px;
+    font-size: 42px;
     font-weight: 800;
     color: var(--text);
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
   }
   .s-lead {
-    font-size: 17px;
+    font-size: 18px;
     color: var(--text-soft);
-    line-height: 1.7;
+    line-height: 1.8;
     max-width: 900px;
   }
-
-  /* Slide body */
   .s-body {
     flex: 1;
     display: flex;
@@ -110,71 +172,122 @@
   .s-body.center { align-items: center; justify-content: center; }
   .s-body.column { flex-direction: column; }
 
-  /* Two-col layout */
-  .col-left, .col-right { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  /* === Big number callout === */
+  .big-number-slide {
+    background: linear-gradient(135deg, #fff 0%, #f0f7ff 100%);
+    text-align: center;
+  }
+  .big-number {
+    font-size: 240px;
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--primary), var(--accent-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+  .big-number-unit {
+    font-size: 64px;
+    color: var(--text);
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .big-number-label {
+    font-size: 28px;
+    color: var(--text-soft);
+    line-height: 1.6;
+    max-width: 800px;
+    margin: 0 auto;
+  }
 
-  /* Cards & bullets */
-  .feat-grid {
+  /* === Before/After comparison === */
+  .ba-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 0;
+    align-items: stretch;
     width: 100%;
+    flex: 1;
+    min-height: 0;
   }
-  .feat-card {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  .ba-side {
+    border-radius: 16px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
-  .feat-icon { font-size: 36px; margin-bottom: 10px; }
-  .feat-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
-  .feat-desc { font-size: 13px; color: var(--text-soft); line-height: 1.7; }
-
-  .bullets {
-    list-style: none;
-    font-size: 17px;
-    line-height: 2.2;
+  .ba-before {
+    background: linear-gradient(135deg, #fff5f5, #ffe8e8);
+    border: 2px solid #fed7d7;
+  }
+  .ba-after {
+    background: linear-gradient(135deg, #f0f7ff, #e0f0ff);
+    border: 2px solid #bee3f8;
+    box-shadow: 0 12px 40px var(--primary-glow);
+  }
+  .ba-label {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    margin-bottom: 8px;
+  }
+  .ba-before .ba-label { color: #c53030; }
+  .ba-after .ba-label { color: var(--primary); }
+  .ba-title {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 14px;
     color: var(--text);
   }
-  .bullets li {
-    padding-left: 32px;
-    position: relative;
-  }
-  .bullets li::before {
-    content: '▶';
-    position: absolute;
-    left: 6px;
+  .ba-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
     color: var(--primary);
-    font-size: 12px;
-    top: 10px;
+    font-weight: 800;
   }
-  .bullets strong { color: var(--primary-dark); }
+  .ba-list {
+    list-style: none;
+    font-size: 15px;
+    line-height: 2;
+    color: var(--text);
+    flex: 1;
+  }
+  .ba-before .ba-list li::before { content: '😩 '; margin-right: 6px; }
+  .ba-after .ba-list li::before { content: '✨ '; margin-right: 6px; }
+  .ba-stat {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .ba-stat strong {
+    display: block;
+    font-size: 38px;
+    color: var(--text);
+    font-weight: 900;
+    margin-bottom: 4px;
+  }
 
-  /* Captioned mockup column */
+  /* === Mockup === */
   .mockup-wrap {
-    background: #fff;
+    background: #1a2332;
+    padding: 6px 6px 0;
     border-radius: 14px;
     overflow: hidden;
-    box-shadow: 0 18px 50px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
-    border: 1px solid #d1d8e0;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.1);
     flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
   }
-  .mockup-wrap.with-frame {
-    background: #1a2332;
-    padding: 6px 6px 0;
-  }
-  .mockup-bar {
-    display: flex;
-    gap: 5px;
-    padding: 4px 8px 6px;
-  }
-  .mockup-bar .dot {
-    width: 10px; height: 10px; border-radius: 50%;
-  }
+  .mockup-bar { display: flex; gap: 5px; padding: 4px 8px 6px; }
+  .mockup-bar .dot { width: 10px; height: 10px; border-radius: 50%; }
   .dot.r { background: #ff5f57; }
   .dot.y { background: #febc2e; }
   .dot.g { background: #28c840; }
@@ -186,104 +299,66 @@
     flex-direction: column;
   }
 
-  /* App mockup parts */
   .app-header {
     background: linear-gradient(135deg, #4a90e2, #357abd);
     color: #fff;
-    padding: 12px 18px;
+    padding: 10px 16px;
     display: flex;
     align-items: center;
-    gap: 14px;
-    font-size: 13px;
+    gap: 12px;
+    font-size: 12px;
   }
-  .app-logo { font-weight: 800; font-size: 17px; }
-  .app-sub { font-size: 11px; opacity: 0.85; }
+  .app-logo { font-weight: 800; font-size: 15px; }
   .ws-chip {
     background: rgba(255,255,255,0.2);
-    padding: 4px 10px;
+    padding: 3px 9px;
     border-radius: 12px;
-    font-size: 12px;
+    font-size: 11px;
   }
   .spacer { flex: 1; }
-  .month-sel {
-    background: rgba(255,255,255,0.95);
-    color: var(--text);
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-  .gen-btn {
-    background: #fff;
-    color: var(--primary);
-    padding: 8px 18px;
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: 13px;
-  }
-  .help-btn {
-    background: rgba(255,255,255,0.18);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.3);
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-  }
+  .month-sel { background: rgba(255,255,255,0.95); color: var(--text); padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+  .gen-btn { background: #fff; color: var(--primary); padding: 6px 14px; border-radius: 5px; font-weight: 700; font-size: 12px; }
+  .help-btn { background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 5px 10px; border-radius: 5px; font-size: 11px; }
 
   .tab-bar {
     background: #fff;
     border-bottom: 1px solid var(--border);
-    padding: 6px 12px;
+    padding: 5px 10px;
     display: flex;
-    gap: 4px;
+    gap: 3px;
   }
   .tab {
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 11px;
     color: var(--text-soft);
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: transparent;
+    gap: 5px;
   }
   .tab .step-num {
-    width: 18px; height: 18px;
+    width: 16px; height: 16px;
     background: rgba(74,144,226,0.15);
     color: var(--primary);
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
   }
-  .tab.active {
-    background: var(--primary);
-    color: #fff;
-  }
-  .tab.active .step-num {
-    background: rgba(255,255,255,0.3);
-    color: #fff;
-  }
-  .tab .badge {
-    background: var(--primary);
-    color: #fff;
-    border-radius: 10px;
-    padding: 1px 6px;
-    font-size: 10px;
-    margin-left: 4px;
-  }
+  .tab.active { background: var(--primary); color: #fff; }
+  .tab.active .step-num { background: rgba(255,255,255,0.3); color: #fff; }
+  .tab .badge { background: var(--primary); color: #fff; border-radius: 10px; padding: 1px 5px; font-size: 9px; margin-left: 3px; }
   .tab.active .badge { background: rgba(255,255,255,0.3); }
 
   .app-body {
-    padding: 16px 20px;
+    padding: 14px 16px;
     flex: 1;
     overflow: hidden;
     background: #f7f9fc;
   }
 
-  /* Caption under mockup */
   .caption {
     margin-top: 12px;
     color: var(--text-soft);
@@ -292,80 +367,56 @@
     text-align: center;
   }
 
-  /* Generic UI primitives inside mockup */
-  .card-box {
+  /* === Excel mockup (for before image) === */
+  .excel-mock {
     background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 12px;
-    margin-bottom: 10px;
+    border: 1px solid #b1b5b9;
+    flex: 1;
+    overflow: hidden;
+    font-family: 'MS Gothic', 'Yu Gothic', monospace;
+    font-size: 9px;
   }
-  .card-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .label-tiny { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
-  .input-mock {
-    background: #fafbfc;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
+  .excel-header {
+    background: #217346;
+    color: #fff;
     padding: 4px 8px;
     font-size: 11px;
-    color: var(--text);
-    min-width: 120px;
-    display: inline-block;
-  }
-  .btn-mock {
-    background: var(--primary);
-    color: #fff;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    display: inline-block;
-  }
-  .btn-mock.secondary {
-    background: #edf2f7;
-    color: var(--text);
-  }
-
-  /* Staff card mock */
-  .staff-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    align-items: center;
     gap: 8px;
   }
-  .staff-card-m {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 11px;
-  }
-  .staff-name-m { font-weight: 700; font-size: 12px; }
-  .staff-role-m { color: var(--text-muted); font-size: 10px; }
-  .badge-mini {
-    display: inline-block;
-    padding: 2px 6px;
-    background: #e0f5e8;
-    color: #22863a;
-    border-radius: 10px;
+  .excel-toolbar {
+    background: #f0f0f0;
+    padding: 3px 8px;
     font-size: 9px;
-    margin-top: 4px;
+    color: #555;
+    border-bottom: 1px solid #ccc;
   }
-  .badge-mini.gray { background: #f0f0f0; color: #666; }
+  .excel-grid {
+    display: grid;
+    grid-template-columns: 60px repeat(12, 1fr);
+    font-size: 9px;
+  }
+  .excel-cell {
+    border-right: 1px solid #d4d4d4;
+    border-bottom: 1px solid #d4d4d4;
+    padding: 3px 4px;
+    text-align: center;
+    background: #fff;
+  }
+  .excel-cell.header { background: #f0f0f0; font-weight: bold; color: #666; }
+  .excel-cell.name { background: #f8f8f8; text-align: left; font-weight: bold; }
+  .excel-cell.error { background: #ffe0e0; color: #c00; }
+  .excel-cell.conflict { background: #fff4e0; color: #c70; }
 
-  /* Calendar mock */
+  /* === Calendar mock === */
   .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 4px;
     font-size: 10px;
   }
-  .cal-head {
-    text-align: center;
-    color: var(--text-muted);
-    font-weight: 600;
-    padding: 4px 0;
-  }
+  .cal-head { text-align: center; color: var(--text-muted); font-weight: 600; padding: 4px 0; }
   .cal-cell {
     background: #fff;
     border: 1px solid var(--border);
@@ -379,23 +430,10 @@
   .cal-cell.wish-off .num { color: #c53030; font-weight: 700; }
   .cal-cell.paid { background: #ebf8ff; border-color: #bee3f8; }
   .cal-cell.paid .num { color: #2c5282; font-weight: 700; }
-  .cal-cell.event { background: #fffbeb; border-color: #fbd38d; }
-  .cal-cell.event .num { color: #b45309; font-weight: 700; }
-  .cal-cell .tag {
-    display: block;
-    font-size: 8px;
-    padding: 1px 3px;
-    border-radius: 2px;
-    margin-top: 2px;
-  }
+  .cal-cell .tag { display: block; font-size: 8px; padding: 1px 3px; border-radius: 2px; margin-top: 2px; }
 
-  /* Shift table */
-  .shift-table {
-    background: #fff;
-    border-radius: 6px;
-    overflow: hidden;
-    width: 100%;
-  }
+  /* === Shift table === */
+  .shift-table { background: #fff; border-radius: 6px; overflow: hidden; width: 100%; }
   .shift-table-row {
     display: grid;
     grid-template-columns: 80px repeat(15, 1fr);
@@ -416,46 +454,331 @@
     background: #f7f9fc;
   }
   .shift-table-row.head > div { background: #edf2f7; color: var(--text-muted); font-weight: 700; font-size: 9px; }
-  .shift-cell {
-    color: #fff;
-    font-weight: 800;
-  }
+  .shift-cell { color: #fff; font-weight: 800; }
   .shift-cell.d { background: var(--d-shift); }
   .shift-cell.n { background: var(--n-shift); }
   .shift-cell.a { background: var(--a-shift); }
   .shift-cell.o { background: var(--o-shift); }
   .shift-cell.y { background: var(--y-shift); }
+  .shift-cell.empty { background: #f0f0f0; color: #ccc; }
 
-  /* Summary cards */
-  .summary-grid {
+  /* === Magic moment === */
+  .magic-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    grid-template-columns: 1fr 80px 1fr 80px 1fr;
+    gap: 0;
+    align-items: stretch;
+    width: 100%;
   }
-  .summary-card {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 10px;
-  }
-  .summary-title { font-weight: 700; font-size: 12px; margin-bottom: 6px; }
-  .summary-stats {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 4px;
+  .magic-step {
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
   }
-  .stat-mini { padding: 4px; border-radius: 4px; }
-  .stat-mini .val { font-weight: 800; font-size: 13px; display: block; }
-  .stat-mini .lbl { font-size: 8px; opacity: 0.8; }
-  .stat-mini.d { background: rgba(76,175,80,0.15); color: #2e7d32; }
-  .stat-mini.n { background: rgba(156,39,176,0.15); color: #6a1b7c; }
-  .stat-mini.a { background: rgba(255,152,0,0.15); color: #b25f00; }
-  .stat-mini.o { background: rgba(158,158,158,0.15); color: #555; }
-  .stat-mini.y { background: rgba(33,150,243,0.15); color: #1565c0; }
+  .magic-step.input { background: #fff5f5; border: 2px solid #fed7d7; }
+  .magic-step.process {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: 2px solid var(--primary-dark);
+    box-shadow: 0 8px 30px var(--primary-glow);
+  }
+  .magic-step.output { background: #f0fdf4; border: 2px solid #bbf7d0; }
+  .magic-label { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; margin-bottom: 6px; opacity: 0.7; }
+  .magic-title { font-size: 18px; font-weight: 800; margin-bottom: 12px; }
+  .magic-vis {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    margin: 8px 0;
+  }
+  .magic-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: var(--primary);
+  }
+  .magic-arrow .pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
 
-  /* Loading mock */
+  /* === Feature cards === */
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+  }
+  .feat-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .feat-card.highlight {
+    background: linear-gradient(135deg, #f0f7ff, #fff);
+    border-color: var(--primary);
+    box-shadow: 0 8px 24px var(--primary-glow);
+  }
+  .feat-icon { font-size: 40px; margin-bottom: 10px; }
+  .feat-title { font-size: 17px; font-weight: 800; margin-bottom: 6px; color: var(--text); }
+  .feat-desc { font-size: 13px; color: var(--text-soft); line-height: 1.7; }
+
+  /* === Numbers bar === */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    width: 100%;
+  }
+  .stat-box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 28px 20px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+  .stat-num {
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--primary), var(--accent-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-num-suffix { font-size: 26px; color: var(--text); font-weight: 700; }
+  .stat-cap { font-size: 14px; color: var(--text-muted); margin-top: 6px; font-weight: 600; }
+  .stat-desc { font-size: 12px; color: var(--text-soft); margin-top: 8px; line-height: 1.6; }
+
+  /* === Comparison table === */
+  .comp-table {
+    width: 100%;
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  }
+  .comp-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .comp-table th, .comp-table td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 15px;
+  }
+  .comp-table th {
+    background: #f7f9fc;
+    font-weight: 700;
+    color: var(--text);
+    font-size: 14px;
+  }
+  .comp-table th.shiftmaker {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    text-align: center;
+  }
+  .comp-table td.feature { font-weight: 600; color: var(--text); width: 28%; }
+  .comp-table td.cell { text-align: center; }
+  .comp-table td.shiftmaker {
+    background: rgba(74,144,226,0.05);
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+  .check { color: var(--accent-green); font-size: 20px; font-weight: 800; }
+  .cross { color: #cbd5e0; font-size: 20px; }
+  .partial { color: var(--accent-amber); font-size: 18px; font-weight: 700; }
+
+  /* === Demo story === */
+  .story-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+  }
+  .story-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 22px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  }
+  .story-num {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    line-height: 42px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  .story-time {
+    display: inline-block;
+    background: #f0f7ff;
+    color: var(--primary);
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .story-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; color: var(--text); }
+  .story-desc { font-size: 13px; color: var(--text-soft); line-height: 1.8; }
+
+  /* === Quote / persona === */
+  .quote-block {
+    background: #fff;
+    border-radius: 16px;
+    padding: 36px 40px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    border: 1px solid var(--border);
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .quote-text {
+    font-size: 22px;
+    line-height: 1.8;
+    color: var(--text);
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+  .quote-text::before {
+    content: '"';
+    font-size: 80px;
+    color: var(--primary);
+    line-height: 0;
+    margin-right: 4px;
+    vertical-align: -40px;
+    font-family: Georgia, serif;
+  }
+  .quote-author {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .quote-avatar {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+  .quote-meta-name { font-weight: 700; color: var(--text); }
+  .quote-meta-role { font-size: 13px; color: var(--text-muted); }
+
+  /* === Bullets === */
+  .bullets {
+    list-style: none;
+    font-size: 17px;
+    line-height: 2.2;
+    color: var(--text);
+  }
+  .bullets li {
+    padding-left: 32px;
+    position: relative;
+  }
+  .bullets li::before {
+    content: '▶';
+    position: absolute;
+    left: 6px;
+    color: var(--primary);
+    font-size: 11px;
+    top: 13px;
+  }
+  .bullets strong { color: var(--primary-dark); }
+
+  /* === Final slide === */
+  .slide-final {
+    background: linear-gradient(135deg, #0d1421 0%, #2c5fa5 100%);
+    color: #fff;
+    overflow: hidden;
+  }
+  .slide-final::before {
+    content: '';
+    position: absolute;
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(74,144,226,0.2), transparent 70%);
+    top: -300px; right: -300px;
+    border-radius: 50%;
+  }
+  .final-content {
+    text-align: center;
+    z-index: 1;
+    position: relative;
+  }
+  .final-title {
+    font-size: 80px;
+    font-weight: 900;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #ffffff, #b3d9ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .url-pill {
+    margin-top: 32px;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.4);
+    color: #fff;
+    padding: 18px 36px;
+    border-radius: 50px;
+    display: inline-block;
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  /* === Specific UI primitives === */
+  .input-mock {
+    background: #fafbfc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: var(--text);
+    min-width: 100px;
+    display: inline-block;
+  }
+  .btn-mock {
+    background: var(--primary);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-block;
+  }
+  .label-tiny { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .staff-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .staff-card-m { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 11px; }
+  .staff-name-m { font-weight: 700; font-size: 12px; }
+  .staff-role-m { color: var(--text-muted); font-size: 10px; }
+  .badge-mini { display: inline-block; padding: 2px 6px; background: #e0f5e8; color: #22863a; border-radius: 10px; font-size: 9px; margin-top: 4px; }
+  .badge-mini.gray { background: #f0f0f0; color: #666; }
+
   .loading-mock {
     height: 100%;
     display: flex;
@@ -475,75 +798,15 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Gate mock */
-  .gate-mock {
-    height: 100%;
-    background: linear-gradient(135deg, #f5f7fa, #e8ecf3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .gate-card-m {
-    background: #fff;
-    border-radius: 14px;
-    padding: 28px 24px;
-    width: 100%;
-    max-width: 360px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
-  }
+  .gate-mock { height: 100%; background: linear-gradient(135deg, #f5f7fa, #e8ecf3); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .gate-card-m { background: #fff; border-radius: 14px; padding: 28px 24px; width: 100%; max-width: 360px; box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
   .gate-title { text-align: center; font-size: 22px; font-weight: 800; margin-bottom: 4px; }
   .gate-sub { text-align: center; color: var(--text-muted); font-size: 12px; margin-bottom: 18px; }
   .gate-form { display: flex; flex-direction: column; gap: 10px; }
-  .gate-input {
-    border: 1px solid var(--border);
-    padding: 10px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--text);
-    background: #fafbfc;
-  }
-  .gate-btn {
-    background: var(--primary);
-    color: #fff;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: 700;
-    font-size: 14px;
-  }
+  .gate-input { border: 1px solid var(--border); padding: 10px 12px; border-radius: 8px; font-size: 13px; color: var(--text); background: #fafbfc; }
+  .gate-btn { background: var(--primary); color: #fff; padding: 10px; border-radius: 8px; text-align: center; font-weight: 700; font-size: 14px; }
 
-  /* Step pills */
-  .step-pills {
-    display: flex;
-    gap: 12px;
-    width: 100%;
-    margin-top: 16px;
-  }
-  .step-pill {
-    flex: 1;
-    background: #fff;
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    text-align: center;
-    font-size: 13px;
-    color: var(--text-soft);
-  }
-  .step-pill .num {
-    display: inline-block;
-    width: 32px; height: 32px;
-    background: var(--primary);
-    color: #fff;
-    border-radius: 50%;
-    line-height: 32px;
-    font-weight: 800;
-    font-size: 14px;
-    margin-bottom: 8px;
-  }
-  .step-pill .name { font-weight: 700; color: var(--text); margin-bottom: 4px; }
-
-  /* Footer with progress */
+  /* === Nav === */
   .nav-controls {
     position: fixed;
     bottom: 20px;
@@ -552,67 +815,45 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    background: rgba(26,35,50,0.85);
+    background: rgba(13,20,33,0.85);
     color: #fff;
-    padding: 8px 18px;
-    border-radius: 24px;
+    padding: 10px 20px;
+    border-radius: 28px;
     z-index: 100;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
   }
   .nav-btn {
     background: rgba(255,255,255,0.15);
     color: #fff;
     border: none;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    font-size: 16px;
+    font-size: 18px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   .nav-btn:hover { background: rgba(255,255,255,0.3); }
-  .nav-counter { font-size: 13px; font-variant-numeric: tabular-nums; }
-  .nav-toggle {
-    margin-left: 6px;
-    font-size: 12px;
-    background: transparent;
-    color: rgba(255,255,255,0.7);
-    border: none;
-    cursor: pointer;
-  }
+  .nav-counter { font-size: 14px; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .nav-toggle { margin-left: 6px; font-size: 14px; background: transparent; color: rgba(255,255,255,0.7); border: none; cursor: pointer; }
 
   .progress-bar {
     position: fixed;
     top: 0; left: 0;
-    height: 3px;
-    background: var(--primary);
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--accent-green));
     z-index: 200;
-    transition: width 0.3s;
+    transition: width 0.4s ease;
   }
 
-  /* Final slide */
-  .slide-final {
-    background: linear-gradient(135deg, #2c5fa5 0%, #1a2332 100%);
-    color: #fff;
-  }
-  .slide-final .s-title { color: #fff; font-size: 56px; }
-  .slide-final .s-lead { color: rgba(255,255,255,0.85); font-size: 20px; max-width: none; }
-  .qr-fake {
-    margin-top: 28px;
-    background: #fff;
-    color: var(--text);
-    padding: 18px 24px;
-    border-radius: 10px;
-    display: inline-block;
-    font-family: monospace;
-    font-size: 15px;
-    font-weight: 700;
-  }
+  /* === Highlight === */
+  .hi { background: linear-gradient(transparent 60%, rgba(74,144,226,0.25) 60%); padding: 0 4px; font-weight: 700; }
+  .hi-red { background: linear-gradient(transparent 60%, rgba(231,76,60,0.25) 60%); padding: 0 4px; font-weight: 700; }
+  .hi-green { background: linear-gradient(transparent 60%, rgba(39,174,96,0.25) 60%); padding: 0 4px; font-weight: 700; }
 
-  /* Print styles */
   @media print {
     @page { size: landscape; margin: 0; }
     html, body { height: auto; overflow: visible; background: #fff; }
@@ -635,148 +876,261 @@
 
 <div id="stage">
 
-<!-- ========== SLIDE 1: Title ========== -->
-<section class="slide slide-title active">
-  <div class="title-content">
-    <div class="title-icon">📅</div>
-    <div class="title-main">ShiftMaker</div>
-    <div class="title-sub">看護師シフトを、3分で。</div>
-    <div class="title-meta">月間シフト自動生成システム / プレゼンテーション資料</div>
+<!-- =========================================================
+     SLIDE 1: HERO TITLE
+========================================================= -->
+<section class="slide slide-hero active">
+  <div class="hero-content">
+    <div class="hero-eyebrow">FOR NURSING SUPERVISORS</div>
+    <div class="hero-icon">📅</div>
+    <div class="hero-main">看護師シフト、<br>もう手で組まない。</div>
+    <div class="hero-sub">月8時間の作業を、3分に。</div>
+    <div class="hero-tagline">— ShiftMaker —</div>
   </div>
 </section>
 
-<!-- ========== SLIDE 2: Problem ========== -->
+<!-- =========================================================
+     SLIDE 2: PAIN (Hook)
+========================================================= -->
+<section class="slide slide-pain">
+  <div class="slide-inner" style="justify-content: center;">
+    <div class="pain-quote">
+      「<span class="red">深夜2時</span>、<br>
+      まだシフト表が完成しない。<br>
+      もう、嫌だ。」
+      <span class="small">— 看護師長Aさん（仮想ペルソナ）</span>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 3: The Numbers Behind The Pain
+========================================================= -->
 <section class="slide">
   <div class="slide-inner">
     <div class="s-head">
-      <div class="s-eyebrow">PROBLEM</div>
-      <div class="s-title">毎月のシフト作成、こんな悩みありませんか？</div>
+      <div class="s-eyebrow">REALITY CHECK</div>
+      <div class="s-title">シフト作成にかかる時間、知ってますか？</div>
     </div>
     <div class="s-body center">
-      <div class="feat-grid">
-        <div class="feat-card">
-          <div class="feat-icon">⏰</div>
-          <div class="feat-title">数時間〜半日かかる</div>
-          <div class="feat-desc">Excel と睨めっこ。希望休、夜勤バランス、N→A の繋がりを全部手で確認。</div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num">4<span class="stat-num-suffix">時間</span></div>
+          <div class="stat-cap">月1回のシフト作成</div>
+          <div class="stat-desc">10名 × 31日のExcel地獄。<br>夜勤・希望休・連勤チェックを手作業で。</div>
         </div>
-        <div class="feat-card">
-          <div class="feat-icon">⚖️</div>
-          <div class="feat-title">夜勤回数が偏る</div>
-          <div class="feat-desc">「あの人は今月夜勤多すぎ」と毎月クレーム。公平に組むのが難しい。</div>
+        <div class="stat-box">
+          <div class="stat-num">48<span class="stat-num-suffix">時間</span></div>
+          <div class="stat-cap">年間の作業時間</div>
+          <div class="stat-desc">4時間 × 12ヶ月<br><strong>= 丸2日分</strong>を消費</div>
         </div>
-        <div class="feat-card">
-          <div class="feat-icon">🔄</div>
-          <div class="feat-title">やり直しの嵐</div>
-          <div class="feat-desc">急な希望変更が入るたびに整合性を取り直し。1セル動かすと全部崩れる。</div>
+        <div class="stat-box">
+          <div class="stat-num">¥240,000</div>
+          <div class="stat-cap">年間人件費換算</div>
+          <div class="stat-desc">時給5,000円 × 48時間<br><strong>= 看護師長の年収数%</strong></div>
         </div>
-        <div class="feat-card">
-          <div class="feat-icon">📱</div>
-          <div class="feat-title">場所を選ぶ</div>
-          <div class="feat-desc">職場の PC でしか作業できない。家でちょっと続きを、ができない。</div>
-        </div>
-        <div class="feat-card">
-          <div class="feat-icon">🔒</div>
-          <div class="feat-title">個人情報の扱い</div>
-          <div class="feat-desc">クラウド保存は心配。USBでやり取りは紛失リスク。</div>
-        </div>
-        <div class="feat-card">
-          <div class="feat-icon">💰</div>
-          <div class="feat-title">専用ソフトは高い</div>
-          <div class="feat-desc">市販品は数万〜数十万。導入の稟議が通らない。</div>
+        <div class="stat-box">
+          <div class="stat-num">∞</div>
+          <div class="stat-cap">精神的負担</div>
+          <div class="stat-desc">「夜勤偏ってる」<br>「希望ねじ込まれてない」<br>毎月のクレーム対応</div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== SLIDE 3: Solution ========== -->
+<!-- =========================================================
+     SLIDE 4: The Excel Hell (Before)
+========================================================= -->
 <section class="slide">
   <div class="slide-inner">
     <div class="s-head">
-      <div class="s-eyebrow">SOLUTION</div>
-      <div class="s-title">ShiftMaker でぜんぶ解決</div>
-      <div class="s-lead">スマホやPCのブラウザで開くだけ。最適化アルゴリズム（CP-SAT）が、人手では何時間もかかるシフト作成を <strong>数十秒</strong>で完了させます。</div>
+      <div class="s-eyebrow">EXCEL HELL</div>
+      <div class="s-title">いつものシフト作成風景</div>
+      <div class="s-lead">数字が赤くなる。色が衝突する。<span class="hi-red">「あ、夜勤明けに日勤入れてしまった…」</span> ── またやり直し。</div>
+    </div>
+    <div class="s-body" style="align-items: stretch;">
+      <div class="mockup-wrap" style="flex: 1;">
+        <div class="mockup-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+        <div class="excel-mock">
+          <div class="excel-header"><span style="font-weight: 700;">📊</span> シフト表_2026年5月.xlsx</div>
+          <div class="excel-toolbar">ファイル / ホーム / 挿入 / ページレイアウト / 数式 / データ ... &nbsp;&nbsp; A1: スタッフ名</div>
+          <div class="excel-grid">
+            <!-- Header row -->
+            <div class="excel-cell header"></div>
+            <div class="excel-cell header">1</div><div class="excel-cell header">2</div><div class="excel-cell header">3</div><div class="excel-cell header">4</div><div class="excel-cell header">5</div><div class="excel-cell header">6</div><div class="excel-cell header">7</div><div class="excel-cell header">8</div><div class="excel-cell header">9</div><div class="excel-cell header">10</div><div class="excel-cell header">11</div><div class="excel-cell header">12</div>
+            <!-- Data rows -->
+            <div class="excel-cell name">田中</div>
+            <div class="excel-cell">日</div><div class="excel-cell">夜</div><div class="excel-cell">明</div><div class="excel-cell">休</div><div class="excel-cell error">日</div><div class="excel-cell">日</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">夜</div><div class="excel-cell">明</div><div class="excel-cell">休</div><div class="excel-cell">日</div>
+            <div class="excel-cell name">佐藤</div>
+            <div class="excel-cell">夜</div><div class="excel-cell">明</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell conflict">日</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">夜</div><div class="excel-cell">明</div><div class="excel-cell">休</div><div class="excel-cell">日</div>
+            <div class="excel-cell name">鈴木</div>
+            <div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">夜</div><div class="excel-cell">明</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">夜</div>
+            <div class="excel-cell name">山田</div>
+            <div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">夜</div><div class="excel-cell error">夜</div><div class="excel-cell">明</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">休</div>
+            <div class="excel-cell name">伊藤</div>
+            <div class="excel-cell">日</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">夜</div><div class="excel-cell">明</div><div class="excel-cell conflict">日</div><div class="excel-cell">日</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">夜</div><div class="excel-cell">明</div>
+            <div class="excel-cell name">渡辺</div>
+            <div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell error">日</div><div class="excel-cell">日</div>
+            <div class="excel-cell name">高橋</div>
+            <div class="excel-cell">夜</div><div class="excel-cell">明</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">休</div><div class="excel-cell">日</div>
+            <div class="excel-cell name">小林</div>
+            <div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">夜</div><div class="excel-cell">明</div><div class="excel-cell">休</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell">日</div><div class="excel-cell conflict">休</div>
+          </div>
+        </div>
+      </div>
+      <div style="flex: 0 0 280px; display: flex; flex-direction: column; gap: 12px; padding-left: 8px;">
+        <div style="background: #fff5f5; border-left: 5px solid var(--accent-red); border-radius: 6px; padding: 12px 14px;">
+          <div style="font-size: 13px; font-weight: 700; color: #c53030; margin-bottom: 4px;">⚠️ ルール違反</div>
+          <div style="font-size: 12px; color: var(--text);">夜勤の翌日に日勤、2連続夜勤など、目視チェックが必要</div>
+        </div>
+        <div style="background: #fffbeb; border-left: 5px solid var(--accent-amber); border-radius: 6px; padding: 12px 14px;">
+          <div style="font-size: 13px; font-weight: 700; color: #b45309; margin-bottom: 4px;">⚠️ 希望と衝突</div>
+          <div style="font-size: 12px; color: var(--text);">希望休を入れた人がシフトに入っていないか、目視確認</div>
+        </div>
+        <div style="background: #f7f9fc; border-left: 5px solid var(--text-muted); border-radius: 6px; padding: 12px 14px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px;">⏰ 1セル動かすと…</div>
+          <div style="font-size: 12px; color: var(--text);">すべての制約を再チェック。1時間が溶ける。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 5: BIG NUMBER 3分
+========================================================= -->
+<section class="slide big-number-slide">
+  <div class="slide-inner" style="justify-content: center; text-align: center;">
+    <div style="margin-bottom: 20px;">
+      <div class="s-eyebrow" style="text-align: center;">SHIFTMAKER で</div>
+    </div>
+    <div class="big-number">3</div>
+    <div class="big-number-unit">分</div>
+    <div class="big-number-label">
+      で、<span class="hi">1ヶ月分のシフトが完成</span>。<br>
+      4時間 → 3分。<strong style="color: var(--primary);">作業時間が 1/80 に。</strong>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 6: Before / After Comparison
+========================================================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="s-head">
+      <div class="s-eyebrow">BEFORE / AFTER</div>
+      <div class="s-title">手作業 vs ShiftMaker</div>
+    </div>
+    <div class="s-body" style="align-items: stretch;">
+      <div class="ba-grid">
+        <div class="ba-side ba-before">
+          <div class="ba-label">BEFORE</div>
+          <div class="ba-title">😩 Excel手作業</div>
+          <ul class="ba-list">
+            <li>1セルずつ「夜→明→休」を確認</li>
+            <li>希望休と被ってないか目視チェック</li>
+            <li>連勤・夜勤回数を電卓で集計</li>
+            <li>1人動かすと全員に影響</li>
+            <li>「公平に組めた」と言える根拠ゼロ</li>
+          </ul>
+          <div class="ba-stat">
+            <strong>4時間/月</strong>
+            毎月、丸半日が消える
+          </div>
+        </div>
+        <div class="ba-arrow">→</div>
+        <div class="ba-side ba-after">
+          <div class="ba-label">AFTER</div>
+          <div class="ba-title">✨ ShiftMaker</div>
+          <ul class="ba-list">
+            <li>スタッフ登録は<strong>「⚡まとめて追加」</strong>で30秒</li>
+            <li>希望休はカレンダーをタップするだけ</li>
+            <li><strong>「シフト生成」ボタン1つ</strong>で全部終了</li>
+            <li>夜勤回数は自動で均等化</li>
+            <li>集計タブで公平性を数値で証明</li>
+          </ul>
+          <div class="ba-stat">
+            <strong>3分/月</strong>
+            浮いた時間は、患者ケアへ
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 7: HOW (3 Steps)
+========================================================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="s-head">
+      <div class="s-eyebrow">HOW IT WORKS</div>
+      <div class="s-title">使い方は、たった3ステップ</div>
+      <div class="s-lead">スマホでもPCでも、ブラウザを開くだけ。インストール不要、登録不要。</div>
     </div>
     <div class="s-body center">
-      <div class="feat-grid">
-        <div class="feat-card">
-          <div class="feat-icon">⚡</div>
-          <div class="feat-title">自動最適化</div>
-          <div class="feat-desc">夜勤上限・連勤上限・希望休を考慮して、5〜55秒で最適解を生成。</div>
+      <div class="story-grid">
+        <div class="story-card">
+          <span class="story-num">1</span><span class="story-time">30秒</span>
+          <div class="story-title">スタッフをまとめて登録</div>
+          <div class="story-desc">
+            「看護師」と人数（例: 10）を入力。
+            <strong>看護師1〜10</strong>が一気に登録されます。
+            本名はあとでサクッと編集。
+          </div>
         </div>
-        <div class="feat-card">
-          <div class="feat-icon">📱</div>
-          <div class="feat-title">スマホ完全対応</div>
-          <div class="feat-desc">職場・自宅・通勤中、どこからでも編集。ホーム画面追加でアプリ化も可能。</div>
+        <div class="story-card">
+          <span class="story-num">2</span><span class="story-time">2分</span>
+          <div class="story-title">希望休をタップ入力</div>
+          <div class="story-desc">
+            スタッフを選んで、カレンダーで希望日をタップ。
+            希望休（赤）、有給（青）が一目瞭然で入力できます。
+          </div>
         </div>
-        <div class="feat-card">
-          <div class="feat-icon">🛡️</div>
-          <div class="feat-title">データはあなたのスマホに</div>
-          <div class="feat-desc">名前などの個人情報はサーバに保存されない。端末内のみで完結。</div>
-        </div>
-        <div class="feat-card">
-          <div class="feat-icon">👥</div>
-          <div class="feat-title">複数人で使える</div>
-          <div class="feat-desc">同じURLでも端末ごとに完全独立。お互いのデータは見えない。</div>
-        </div>
-        <div class="feat-card">
-          <div class="feat-icon">💸</div>
-          <div class="feat-title">月額0円</div>
-          <div class="feat-desc">無料でずっと使える。広告なし、機能制限なし。</div>
-        </div>
-        <div class="feat-card">
-          <div class="feat-icon">🎯</div>
-          <div class="feat-title">使いやすさ重視</div>
-          <div class="feat-desc">初回でも迷わないオンボーディング、6タブの直感的なナビゲーション。</div>
+        <div class="story-card">
+          <span class="story-num">3</span><span class="story-time">30秒</span>
+          <div class="story-title">「シフト生成」をタップ</div>
+          <div class="story-desc">
+            AIが最大55秒で1ヶ月分を最適化。
+            <strong>夜勤→明け、上限、希望、すべてを同時に解く。</strong>
+            完成したらそのまま使う、または手動で微調整。
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== SLIDE 4: Flow ========== -->
+<!-- =========================================================
+     SLIDE 8: Screen 1 - Workspace Gate
+========================================================= -->
 <section class="slide">
   <div class="slide-inner">
     <div class="s-head">
-      <div class="s-eyebrow">FLOW</div>
-      <div class="s-title">6ステップで完成</div>
-      <div class="s-lead">初回30分、2回目以降は数分で1ヶ月分のシフトが組み上がります。</div>
-    </div>
-    <div class="s-body center" style="flex-direction: column;">
-      <div class="step-pills">
-        <div class="step-pill"><span class="num">1</span><div class="name">スタッフ管理</div>登録は最初だけ</div>
-        <div class="step-pill"><span class="num">2</span><div class="name">希望入力</div>休み・有給を入力</div>
-        <div class="step-pill"><span class="num">3</span><div class="name">イベント</div>会議・研修を登録</div>
-        <div class="step-pill"><span class="num">4</span><div class="name">日別条件</div>必要人数を調整</div>
-        <div class="step-pill"><span class="num">5</span><div class="name">シフト表</div>確認・手動微調整</div>
-        <div class="step-pill"><span class="num">6</span><div class="name">集計</div>バランスチェック</div>
-      </div>
-      <div style="margin-top: 24px; padding: 14px 20px; background: #f0f7ff; border-radius: 10px; font-size: 14px; color: var(--text); border-left: 4px solid var(--primary);">
-        ⚡ ボタン「シフト生成」は <strong>ヘッダから常時押せる</strong> ので、いつでも組み直し可能
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ========== SLIDE 5: Workspace Gate ========== -->
-<section class="slide">
-  <div class="slide-inner">
-    <div class="s-head">
-      <div class="s-eyebrow">SCREEN 1 / 7</div>
-      <div class="s-title">起動: ワークスペースを選ぶ</div>
+      <div class="s-eyebrow">DEMO 1/5</div>
+      <div class="s-title">📱 URLを開く → 名前入れるだけ</div>
     </div>
     <div class="s-body">
-      <div class="col-left">
-        <div class="bullets" style="margin-top: 20px;">
-          <li>URLを開くと <strong>最初に「ワークスペース」を選ぶ画面</strong> が出ます</li>
-          <li>初回は名前と任意のPINコードを入力して新規作成</li>
-          <li>2回目以降は一覧からタップで開く</li>
-          <li><strong>同じスマホで複数人</strong> が別々のデータで使えます</li>
-          <li>PINコードを設定すれば、端末紛失時も<strong>中身を見られない</strong></li>
+      <div class="col-left" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+        <ul class="bullets" style="margin-bottom: 24px;">
+          <li>ブラウザでURLを開く</li>
+          <li>「<strong>ワークスペース名</strong>」を入力（例: 内科病棟）</li>
+          <li>必要ならPINコードを設定</li>
+          <li>「作成して開く」をタップ</li>
+        </ul>
+        <div style="background: #f0f7ff; border-radius: 12px; padding: 16px 20px; border-left: 5px solid var(--primary);">
+          <div style="font-size: 14px; color: var(--text); line-height: 1.7;">
+            <strong>💡 ここがポイント</strong><br>
+            <span class="hi">アカウント登録なし。</span>メアド入力もパスワードもなし。
+            ブラウザを開いて、名前を入れるだけ。
+          </div>
         </div>
       </div>
-      <div class="col-right">
-        <div class="mockup-wrap with-frame">
+      <div class="col-right" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="mockup-wrap" style="flex: 1;">
           <div class="mockup-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
           <div class="mockup-screen">
             <div class="gate-mock">
@@ -784,8 +1138,8 @@
                 <div class="gate-title">ShiftMaker</div>
                 <div class="gate-sub">ワークスペースを選択してください</div>
                 <div class="gate-form">
-                  <input class="gate-input" placeholder="名前（例: 内科病棟）" value="内科病棟"/>
-                  <input class="gate-input" type="password" placeholder="PINコード（任意）" value="••••"/>
+                  <input class="gate-input" placeholder="名前" value="内科病棟" readonly/>
+                  <input class="gate-input" type="password" placeholder="PINコード（任意）" value="••••" readonly/>
                   <div class="gate-btn">作成して開く</div>
                 </div>
                 <div style="text-align: center; margin-top: 14px; font-size: 11px; color: var(--text-muted);">
@@ -795,106 +1149,121 @@
             </div>
           </div>
         </div>
-        <div class="caption">▲ 初回アクセス時のワークスペース作成画面</div>
+        <div class="caption">▲ 起動画面</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== SLIDE 6: Staff Manager ========== -->
+<!-- =========================================================
+     SLIDE 9: Screen 2 - Bulk Staff
+========================================================= -->
 <section class="slide">
   <div class="slide-inner">
     <div class="s-head">
-      <div class="s-eyebrow">SCREEN 2 / 7</div>
-      <div class="s-title">①スタッフ管理 — まとめて登録</div>
+      <div class="s-eyebrow">DEMO 2/5</div>
+      <div class="s-title">⚡ スタッフ10名を、30秒で登録</div>
     </div>
     <div class="s-body">
-      <div class="col-left">
-        <div class="bullets" style="margin-top: 12px;">
-          <li><strong>「⚡まとめて追加」</strong> で時間短縮</li>
-          <li>役職名 + 人数 を指定するだけ</li>
-          <li><strong>看護師1, 看護師2 ...</strong> と自動採番</li>
-          <li>本名は後で1人ずつタップして編集</li>
-          <li>役職別に複数回追加可能（主任2名 + 看護師8名）</li>
-          <li>夜勤可否・連勤上限などを共通設定で一括</li>
+      <div class="col-left" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+        <div style="background: #fff; border: 2px solid var(--primary); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 16px var(--primary-glow);">
+          <div style="font-size: 13px; color: var(--primary); font-weight: 700; margin-bottom: 8px;">⚡ まとめて追加機能</div>
+          <div style="font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 12px;">役職名「看護師」+ 人数「10」</div>
+          <div style="font-size: 14px; color: var(--text-soft); line-height: 1.8;">
+            → <strong>看護師1, 看護師2, ..., 看護師10</strong><br>
+            &nbsp;&nbsp;&nbsp;が一瞬で登録されます
+          </div>
         </div>
+        <ul class="bullets">
+          <li>本名は後から1人ずつタップして編集</li>
+          <li>役職別に複数回追加可能（主任2名 + 看護師8名）</li>
+          <li>夜勤可否・上限は<strong>共通設定で一括</strong></li>
+        </ul>
       </div>
-      <div class="col-right">
-        <div class="mockup-wrap with-frame">
+      <div class="col-right" style="flex: 1.2; display: flex; flex-direction: column;">
+        <div class="mockup-wrap" style="flex: 1;">
           <div class="mockup-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
           <div class="mockup-screen">
             <div class="app-header">
-              <div><div class="app-logo">ShiftMaker</div><div class="app-sub">看護師シフト管理</div></div>
+              <div class="app-logo">ShiftMaker</div>
               <div class="ws-chip">👤 内科病棟</div>
               <div class="spacer"></div>
-              <div class="help-btn">？使い方</div>
-              <div class="month-sel">2026年 5月 ▾</div>
+              <div class="help-btn">？</div>
+              <div class="month-sel">2026年 5月</div>
               <div class="gen-btn">シフト生成</div>
             </div>
             <div class="tab-bar">
-              <div class="tab active"><span class="step-num">1</span>スタッフ管理<span class="badge">10</span></div>
-              <div class="tab"><span class="step-num">2</span>希望入力</div>
+              <div class="tab active"><span class="step-num">1</span>スタッフ<span class="badge">10</span></div>
+              <div class="tab"><span class="step-num">2</span>希望</div>
               <div class="tab"><span class="step-num">3</span>イベント</div>
-              <div class="tab"><span class="step-num">4</span>日別条件</div>
+              <div class="tab"><span class="step-num">4</span>条件</div>
               <div class="tab"><span class="step-num">5</span>シフト表</div>
               <div class="tab"><span class="step-num">6</span>集計</div>
             </div>
             <div class="app-body">
               <div style="display: flex; gap: 4px; margin-bottom: 10px; border-bottom: 1px solid #edf2f7;">
-                <div style="padding: 6px 12px; color: var(--text-muted); font-size: 11px;">1名ずつ追加</div>
-                <div style="padding: 6px 12px; color: var(--primary); font-size: 11px; font-weight: 700; border-bottom: 2px solid var(--primary); margin-bottom: -1px;">⚡ まとめて追加（おすすめ）</div>
+                <div style="padding: 6px 12px; color: var(--text-muted); font-size: 11px;">1名ずつ</div>
+                <div style="padding: 6px 12px; color: var(--primary); font-size: 11px; font-weight: 700; border-bottom: 2px solid var(--primary); margin-bottom: -1px;">⚡ まとめて追加</div>
               </div>
               <div style="background: #f0f7ff; border-left: 3px solid var(--primary); padding: 8px 10px; border-radius: 4px; margin-bottom: 10px; font-size: 11px; color: var(--text);">
-                役職名 + 人数で「<strong>看護師1, 看護師2 ...</strong>」のように一括登録
+                役職名 + 人数で「<strong>看護師1, 看護師2 ...</strong>」と一括登録
               </div>
               <div style="display: flex; gap: 8px; align-items: end; margin-bottom: 12px;">
                 <div><div class="label-tiny">役職名</div><span class="input-mock">看護師</span></div>
-                <div><div class="label-tiny">人数</div><span class="input-mock" style="min-width: 50px;">8</span></div>
+                <div><div class="label-tiny">人数</div><span class="input-mock" style="min-width: 50px;">10</span></div>
                 <div><div class="label-tiny">夜勤上限</div><span class="input-mock" style="min-width: 50px;">8</span></div>
-                <div><div class="label-tiny">連勤上限</div><span class="input-mock" style="min-width: 50px;">5</span></div>
-                <div style="font-size: 11px;">☑ 全員夜勤可</div>
-                <div class="btn-mock">8名 一括追加</div>
+                <div class="btn-mock">10名 一括追加</div>
               </div>
-              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">登録済み: 10名 (夜勤可8 / 不可2)</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">登録済み: 10名（夜勤可 8 / 不可 2）</div>
               <div class="staff-grid">
                 <div class="staff-card-m"><div class="staff-name-m">看護師1</div><div class="staff-role-m">看護師</div><span class="badge-mini">夜勤可</span></div>
                 <div class="staff-card-m"><div class="staff-name-m">看護師2</div><div class="staff-role-m">看護師</div><span class="badge-mini">夜勤可</span></div>
-                <div class="staff-card-m"><div class="staff-name-m">主任1</div><div class="staff-role-m">主任</div><span class="badge-mini gray">日勤のみ</span></div>
-                <div class="staff-card-m"><div class="staff-name-m">主任2</div><div class="staff-role-m">主任</div><span class="badge-mini">夜勤可</span></div>
+                <div class="staff-card-m"><div class="staff-name-m">看護師3</div><div class="staff-role-m">看護師</div><span class="badge-mini">夜勤可</span></div>
+                <div class="staff-card-m"><div class="staff-name-m">看護師4</div><div class="staff-role-m">看護師</div><span class="badge-mini">夜勤可</span></div>
               </div>
             </div>
           </div>
         </div>
-        <div class="caption">▲ 役職と人数だけで即登録、あとから本名に編集可能</div>
+        <div class="caption">▲ スタッフ管理画面（PC表示）</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== SLIDE 7: Wish Input ========== -->
+<!-- =========================================================
+     SLIDE 10: Screen 3 - Wish Input
+========================================================= -->
 <section class="slide">
   <div class="slide-inner">
     <div class="s-head">
-      <div class="s-eyebrow">SCREEN 3 / 7</div>
-      <div class="s-title">②希望入力 — カレンダーをタップ</div>
+      <div class="s-eyebrow">DEMO 3/5</div>
+      <div class="s-title">📅 希望休はカレンダーをタップするだけ</div>
     </div>
     <div class="s-body">
-      <div class="col-left">
-        <div class="bullets" style="margin-top: 12px;">
-          <li>スタッフを選んで、休みたい日をタップ</li>
-          <li><strong style="color: #c53030;">希望休</strong> — 可能な限り「休み」に</li>
-          <li><strong style="color: #2c5282;">有給</strong> — 必ず Y が割り当てられる</li>
-          <li>もう一度タップで取り消し</li>
-          <li>絶対外せない予定は <strong>有給</strong> がおすすめ</li>
-          <li>大量入力もタップだけでサクサク</li>
+      <div class="col-left" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+        <ul class="bullets" style="margin-bottom: 20px;">
+          <li>スタッフを選ぶ（横スクロールで切替）</li>
+          <li>「希望休」or「有給」を選択</li>
+          <li>カレンダー上で日付をタップ</li>
+          <li>もう一度タップで取消</li>
+        </ul>
+        <div style="display: flex; gap: 12px;">
+          <div style="flex: 1; background: #fff5f5; border-radius: 10px; padding: 14px; border-left: 4px solid #c53030;">
+            <div style="font-size: 12px; color: #c53030; font-weight: 700; margin-bottom: 4px;">🔴 希望休</div>
+            <div style="font-size: 12px; color: var(--text-soft); line-height: 1.6;">可能な限り休みに。<br>必要人数次第で出勤の場合あり。</div>
+          </div>
+          <div style="flex: 1; background: #ebf8ff; border-radius: 10px; padding: 14px; border-left: 4px solid #2c5282;">
+            <div style="font-size: 12px; color: #2c5282; font-weight: 700; margin-bottom: 4px;">🔵 有給</div>
+            <div style="font-size: 12px; color: var(--text-soft); line-height: 1.6;">必ず有給に。<br>絶対外せない予定はこちら。</div>
+          </div>
         </div>
       </div>
-      <div class="col-right">
-        <div class="mockup-wrap with-frame">
+      <div class="col-right" style="flex: 1.2; display: flex; flex-direction: column;">
+        <div class="mockup-wrap" style="flex: 1;">
           <div class="mockup-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
           <div class="mockup-screen">
             <div class="app-header">
-              <div><div class="app-logo">ShiftMaker</div></div>
+              <div class="app-logo">ShiftMaker</div>
               <div class="ws-chip">👤 内科病棟</div>
               <div class="spacer"></div>
               <div class="month-sel">2026年 5月</div>
@@ -902,7 +1271,7 @@
             </div>
             <div class="tab-bar">
               <div class="tab"><span class="step-num">1</span>スタッフ</div>
-              <div class="tab active"><span class="step-num">2</span>希望入力<span class="badge">14</span></div>
+              <div class="tab active"><span class="step-num">2</span>希望<span class="badge">23</span></div>
               <div class="tab"><span class="step-num">3</span>イベント</div>
               <div class="tab"><span class="step-num">4</span>条件</div>
               <div class="tab"><span class="step-num">5</span>シフト表</div>
@@ -914,7 +1283,6 @@
                 <span style="padding: 4px 10px; background: #fff; border: 1px solid var(--border); border-radius: 14px; font-size: 11px;">看護師2</span>
                 <span style="padding: 4px 10px; background: #fff; border: 1px solid var(--border); border-radius: 14px; font-size: 11px;">看護師3</span>
                 <span style="padding: 4px 10px; background: #fff; border: 1px solid var(--border); border-radius: 14px; font-size: 11px;">看護師4</span>
-                <span style="padding: 4px 10px; background: #fff; border: 1px solid var(--border); border-radius: 14px; font-size: 11px;">主任1</span>
               </div>
               <div style="display: flex; gap: 6px; margin-bottom: 10px;">
                 <span style="padding: 4px 10px; background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; border-radius: 4px; font-size: 11px; font-weight: 600;">● 希望休</span>
@@ -936,403 +1304,369 @@
                 <div class="cal-cell"><div class="num" style="color: var(--text)">7</div></div>
                 <div class="cal-cell paid"><div class="num">8</div><span class="tag" style="background: #ebf8ff; color: #2c5282;">有</span></div>
                 <div class="cal-cell"><div class="num" style="color: var(--text)">9</div></div>
-                <div class="cal-cell"><div class="num" style="color: var(--text)">10</div></div>
-                <div class="cal-cell"><div class="num" style="color: var(--text)">11</div></div>
-                <div class="cal-cell wish-off"><div class="num">12</div><span class="tag" style="background: #fff5f5; color: #c53030;">希</span></div>
-                <div class="cal-cell"><div class="num" style="color: var(--text)">13</div></div>
-                <div class="cal-cell"><div class="num" style="color: var(--text)">14</div></div>
-                <div class="cal-cell"><div class="num" style="color: var(--text)">15</div></div>
-                <div class="cal-cell"><div class="num" style="color: var(--text)">16</div></div>
               </div>
             </div>
           </div>
         </div>
-        <div class="caption">▲ 希望休（赤）と有給（青）を色分けで直感的に</div>
+        <div class="caption">▲ 希望入力画面 — 赤=希望休、青=有給</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== SLIDE 8: Generation ========== -->
+<!-- =========================================================
+     SLIDE 11: THE MAGIC MOMENT
+========================================================= -->
 <section class="slide">
   <div class="slide-inner">
     <div class="s-head">
-      <div class="s-eyebrow">SCREEN 4 / 7</div>
-      <div class="s-title">シフト生成 — ワンタップで開始</div>
+      <div class="s-eyebrow">DEMO 4/5 — THE MAGIC MOMENT</div>
+      <div class="s-title">🎬 「シフト生成」をタップした瞬間</div>
+      <div class="s-lead">空のグリッドが、AIの計算により<span class="hi">最適化された完成シフト</span>に変わります。</div>
     </div>
-    <div class="s-body">
-      <div class="col-left">
-        <div class="bullets" style="margin-top: 12px;">
-          <li>「シフト生成」ボタンをワンタップ</li>
-          <li>最適化計算が <strong>5〜55秒</strong> で完了</li>
-          <li>裏側で動くのは <strong>Google OR-Tools (CP-SAT)</strong></li>
-          <li>夜勤→明け、上限、希望、すべてを同時に最適化</li>
-          <li>制約が厳しすぎれば理由を提示してくれる</li>
-          <li>完了するとシフト表タブに自動遷移</li>
-        </div>
-      </div>
-      <div class="col-right">
-        <div class="mockup-wrap with-frame">
-          <div class="mockup-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-          <div class="mockup-screen">
-            <div class="app-header">
-              <div><div class="app-logo">ShiftMaker</div></div>
-              <div class="ws-chip">👤 内科病棟</div>
-              <div class="spacer"></div>
-              <div class="month-sel">2026年 5月</div>
-              <div class="gen-btn" style="background: #f0f0f0; color: #999;">⏳ 生成中...</div>
-            </div>
-            <div class="tab-bar">
-              <div class="tab"><span class="step-num">1</span>スタッフ</div>
-              <div class="tab"><span class="step-num">2</span>希望入力</div>
-              <div class="tab"><span class="step-num">3</span>イベント</div>
-              <div class="tab"><span class="step-num">4</span>条件</div>
-              <div class="tab"><span class="step-num">5</span>シフト表</div>
-              <div class="tab"><span class="step-num">6</span>集計</div>
-            </div>
-            <div class="app-body">
-              <div class="loading-mock">
-                <div class="loading-spinner"></div>
-                <div style="font-size: 16px; font-weight: 700; color: var(--text);">最適なシフトを計算中...</div>
-                <div style="font-size: 12px; color: var(--text-muted);">5〜55秒お待ちください</div>
-                <div style="margin-top: 12px; font-size: 11px; color: var(--text-muted); max-width: 320px; text-align: center; line-height: 1.7;">
-                  10名 × 31日 = 310 セルを<br>
-                  夜勤連鎖・上限・希望・必要人数の制約下で最適化中
-                </div>
-              </div>
+    <div class="s-body center">
+      <div class="magic-grid">
+        <div class="magic-step input">
+          <div class="magic-label">INPUT</div>
+          <div class="magic-title">空のグリッド</div>
+          <div class="magic-vis">
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px;">
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
+              <div style="width: 24px; height: 18px; background: #f0f0f0; border-radius: 3px;"></div>
             </div>
           </div>
+          <div style="font-size: 12px; color: var(--text-soft);">10名 × 31日 = 310セル</div>
         </div>
-        <div class="caption">▲ 生成中の画面。完了するとシフト表に自動遷移</div>
+        <div class="magic-arrow"><span class="pulse">▶</span></div>
+        <div class="magic-step process">
+          <div class="magic-label" style="color: rgba(255,255,255,0.7);">PROCESSING</div>
+          <div class="magic-title">AI が最適化</div>
+          <div class="magic-vis"><div class="loading-spinner" style="border-color: rgba(255,255,255,0.3); border-top-color: #fff;"></div></div>
+          <div style="font-size: 12px; opacity: 0.85; text-align: center; line-height: 1.5;">
+            <strong>Google OR-Tools</strong><br>
+            <strong>CP-SAT solver</strong>
+          </div>
+          <div style="font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: center;">数千の制約を同時最適化</div>
+        </div>
+        <div class="magic-arrow"><span class="pulse">▶</span></div>
+        <div class="magic-step output">
+          <div class="magic-label" style="color: var(--accent-green);">OUTPUT</div>
+          <div class="magic-title">完成シフト</div>
+          <div class="magic-vis">
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px;">
+              <div style="width: 24px; height: 18px; background: var(--d-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">D</div>
+              <div style="width: 24px; height: 18px; background: var(--n-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">N</div>
+              <div style="width: 24px; height: 18px; background: var(--a-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">A</div>
+              <div style="width: 24px; height: 18px; background: var(--o-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">O</div>
+              <div style="width: 24px; height: 18px; background: var(--d-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">D</div>
+              <div style="width: 24px; height: 18px; background: var(--d-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">D</div>
+              <div style="width: 24px; height: 18px; background: var(--n-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">N</div>
+              <div style="width: 24px; height: 18px; background: var(--a-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">A</div>
+              <div style="width: 24px; height: 18px; background: var(--o-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">O</div>
+              <div style="width: 24px; height: 18px; background: var(--d-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">D</div>
+              <div style="width: 24px; height: 18px; background: var(--y-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">Y</div>
+              <div style="width: 24px; height: 18px; background: var(--d-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">D</div>
+              <div style="width: 24px; height: 18px; background: var(--o-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">O</div>
+              <div style="width: 24px; height: 18px; background: var(--n-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">N</div>
+              <div style="width: 24px; height: 18px; background: var(--a-shift); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px;">A</div>
+            </div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-soft);"><strong style="color: var(--accent-green);">最大55秒</strong>で完成</div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== SLIDE 9: Shift Table ========== -->
+<!-- =========================================================
+     SLIDE 12: Screen 4 - Shift Table
+========================================================= -->
 <section class="slide">
   <div class="slide-inner">
     <div class="s-head">
-      <div class="s-eyebrow">SCREEN 5 / 7</div>
-      <div class="s-title">⑤シフト表 — 完成！</div>
+      <div class="s-eyebrow">DEMO 5/5</div>
+      <div class="s-title">✨ 完成。色分けで一目瞭然</div>
     </div>
-    <div class="s-body">
-      <div class="col-left">
-        <div class="bullets" style="margin-top: 12px;">
-          <li>色分けでひと目で<strong>シフトの全体像</strong>が分かる</li>
-          <li><span style="background: #4CAF50; color: #fff; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 13px;">D</span> 日勤 / <span style="background: #9C27B0; color: #fff; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 13px;">N</span> 夜勤 / <span style="background: #FF9800; color: #fff; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 13px;">A</span> 明け / <span style="background: #9E9E9E; color: #fff; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 13px;">O</span> 休 / <span style="background: #2196F3; color: #fff; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 13px;">Y</span> 有給</li>
-          <li>セルを<strong>タップで直接編集</strong>可能</li>
-          <li>N→A の連鎖が自動で守られる</li>
-          <li>スマホは「個人別表示」モードも</li>
-        </div>
-      </div>
-      <div class="col-right">
-        <div class="mockup-wrap with-frame">
-          <div class="mockup-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-          <div class="mockup-screen">
-            <div class="app-header">
-              <div><div class="app-logo">ShiftMaker</div></div>
-              <div class="ws-chip">👤 内科病棟</div>
-              <div class="spacer"></div>
-              <div class="month-sel">2026年 5月</div>
-              <div class="gen-btn">シフト生成</div>
-            </div>
-            <div class="tab-bar">
-              <div class="tab"><span class="step-num">1</span>スタッフ</div>
-              <div class="tab"><span class="step-num">2</span>希望入力</div>
-              <div class="tab"><span class="step-num">3</span>イベント</div>
-              <div class="tab"><span class="step-num">4</span>条件</div>
-              <div class="tab active"><span class="step-num">5</span>シフト表 ✓</div>
-              <div class="tab"><span class="step-num">6</span>集計</div>
-            </div>
-            <div class="app-body" style="padding: 12px;">
-              <div class="shift-table">
-                <div class="shift-table-row head">
-                  <div>名前</div>
-                  <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div><div>15</div>
-                </div>
-                <div class="shift-table-row">
-                  <div class="shift-name">看護師1</div>
-                  <div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell y">Y</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div>
-                </div>
-                <div class="shift-table-row">
-                  <div class="shift-name">看護師2</div>
-                  <div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div>
-                </div>
-                <div class="shift-table-row">
-                  <div class="shift-name">看護師3</div>
-                  <div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div>
-                </div>
-                <div class="shift-table-row">
-                  <div class="shift-name">看護師4</div>
-                  <div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div>
-                </div>
-                <div class="shift-table-row">
-                  <div class="shift-name">看護師5</div>
-                  <div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div>
-                </div>
-                <div class="shift-table-row">
-                  <div class="shift-name">主任1</div>
-                  <div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div>
-                </div>
+    <div class="s-body" style="align-items: stretch;">
+      <div class="mockup-wrap" style="flex: 1;">
+        <div class="mockup-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+        <div class="mockup-screen">
+          <div class="app-header">
+            <div class="app-logo">ShiftMaker</div>
+            <div class="ws-chip">👤 内科病棟</div>
+            <div class="spacer"></div>
+            <div class="month-sel">2026年 5月</div>
+            <div class="gen-btn">シフト生成</div>
+          </div>
+          <div class="tab-bar">
+            <div class="tab"><span class="step-num">1</span>スタッフ</div>
+            <div class="tab"><span class="step-num">2</span>希望</div>
+            <div class="tab"><span class="step-num">3</span>イベント</div>
+            <div class="tab"><span class="step-num">4</span>条件</div>
+            <div class="tab active"><span class="step-num">5</span>シフト表 ✓</div>
+            <div class="tab"><span class="step-num">6</span>集計</div>
+          </div>
+          <div class="app-body" style="padding: 8px 12px;">
+            <div class="shift-table">
+              <div class="shift-table-row head">
+                <div>名前</div><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div><div>15</div>
               </div>
+              <div class="shift-table-row">
+                <div class="shift-name">看護師1</div>
+                <div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell y">Y</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div>
+              </div>
+              <div class="shift-table-row">
+                <div class="shift-name">看護師2</div>
+                <div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div>
+              </div>
+              <div class="shift-table-row">
+                <div class="shift-name">看護師3</div>
+                <div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div>
+              </div>
+              <div class="shift-table-row">
+                <div class="shift-name">看護師4</div>
+                <div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div>
+              </div>
+              <div class="shift-table-row">
+                <div class="shift-name">看護師5</div>
+                <div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell n">N</div><div class="shift-cell a">A</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div>
+              </div>
+              <div class="shift-table-row">
+                <div class="shift-name">主任1</div>
+                <div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div><div class="shift-cell d">D</div><div class="shift-cell o">O</div><div class="shift-cell d">D</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 10px; font-size: 10px; align-items: center; color: var(--text-soft);">
+              <span style="background: var(--d-shift); color: #fff; padding: 2px 8px; border-radius: 3px; font-weight: 700;">D 日勤</span>
+              <span style="background: var(--n-shift); color: #fff; padding: 2px 8px; border-radius: 3px; font-weight: 700;">N 夜勤</span>
+              <span style="background: var(--a-shift); color: #fff; padding: 2px 8px; border-radius: 3px; font-weight: 700;">A 明け</span>
+              <span style="background: var(--o-shift); color: #fff; padding: 2px 8px; border-radius: 3px; font-weight: 700;">O 休み</span>
+              <span style="background: var(--y-shift); color: #fff; padding: 2px 8px; border-radius: 3px; font-weight: 700;">Y 有給</span>
+              <span style="margin-left: auto; color: var(--accent-green); font-weight: 700;">✓ N→A 自動連鎖 / 夜勤バランス均等</span>
             </div>
           </div>
         </div>
-        <div class="caption">▲ 色分けされた1ヶ月分のシフト表（1日〜15日を表示中）</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== SLIDE 10: Summary ========== -->
+<!-- =========================================================
+     SLIDE 13: COMPARISON
+========================================================= -->
 <section class="slide">
   <div class="slide-inner">
     <div class="s-head">
-      <div class="s-eyebrow">SCREEN 6 / 7</div>
-      <div class="s-title">⑥集計 — バランスをチェック</div>
+      <div class="s-eyebrow">COMPARISON</div>
+      <div class="s-title">他の方法と比べてみる</div>
     </div>
-    <div class="s-body">
-      <div class="col-left">
-        <div class="bullets" style="margin-top: 12px;">
-          <li>各スタッフの<strong>月間サマリー</strong>を一目で</li>
-          <li>夜勤回数、休日日数、有給消化を確認</li>
-          <li>偏りがあればシフト表で手動調整 or 設定を見直して再生成</li>
-          <li>公平性が <strong>数値で見える化</strong></li>
-        </div>
-      </div>
-      <div class="col-right">
-        <div class="mockup-wrap with-frame">
-          <div class="mockup-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-          <div class="mockup-screen">
-            <div class="app-header">
-              <div><div class="app-logo">ShiftMaker</div></div>
-              <div class="ws-chip">👤 内科病棟</div>
-              <div class="spacer"></div>
-              <div class="month-sel">2026年 5月</div>
-              <div class="gen-btn">シフト生成</div>
-            </div>
-            <div class="tab-bar">
-              <div class="tab"><span class="step-num">1</span>スタッフ</div>
-              <div class="tab"><span class="step-num">2</span>希望入力</div>
-              <div class="tab"><span class="step-num">3</span>イベント</div>
-              <div class="tab"><span class="step-num">4</span>条件</div>
-              <div class="tab"><span class="step-num">5</span>シフト表</div>
-              <div class="tab active"><span class="step-num">6</span>集計</div>
-            </div>
-            <div class="app-body">
-              <div class="summary-grid">
-                <div class="summary-card">
-                  <div class="summary-title">看護師1</div>
-                  <div class="summary-stats">
-                    <div class="stat-mini d"><span class="val">14</span><span class="lbl">D</span></div>
-                    <div class="stat-mini n"><span class="val">7</span><span class="lbl">N</span></div>
-                    <div class="stat-mini a"><span class="val">7</span><span class="lbl">A</span></div>
-                    <div class="stat-mini o"><span class="val">2</span><span class="lbl">O</span></div>
-                    <div class="stat-mini y"><span class="val">1</span><span class="lbl">Y</span></div>
-                  </div>
-                </div>
-                <div class="summary-card">
-                  <div class="summary-title">看護師2</div>
-                  <div class="summary-stats">
-                    <div class="stat-mini d"><span class="val">13</span><span class="lbl">D</span></div>
-                    <div class="stat-mini n"><span class="val">8</span><span class="lbl">N</span></div>
-                    <div class="stat-mini a"><span class="val">8</span><span class="lbl">A</span></div>
-                    <div class="stat-mini o"><span class="val">2</span><span class="lbl">O</span></div>
-                    <div class="stat-mini y"><span class="val">0</span><span class="lbl">Y</span></div>
-                  </div>
-                </div>
-                <div class="summary-card">
-                  <div class="summary-title">看護師3</div>
-                  <div class="summary-stats">
-                    <div class="stat-mini d"><span class="val">14</span><span class="lbl">D</span></div>
-                    <div class="stat-mini n"><span class="val">7</span><span class="lbl">N</span></div>
-                    <div class="stat-mini a"><span class="val">7</span><span class="lbl">A</span></div>
-                    <div class="stat-mini o"><span class="val">3</span><span class="lbl">O</span></div>
-                    <div class="stat-mini y"><span class="val">0</span><span class="lbl">Y</span></div>
-                  </div>
-                </div>
-                <div class="summary-card">
-                  <div class="summary-title">看護師4</div>
-                  <div class="summary-stats">
-                    <div class="stat-mini d"><span class="val">15</span><span class="lbl">D</span></div>
-                    <div class="stat-mini n"><span class="val">7</span><span class="lbl">N</span></div>
-                    <div class="stat-mini a"><span class="val">7</span><span class="lbl">A</span></div>
-                    <div class="stat-mini o"><span class="val">2</span><span class="lbl">O</span></div>
-                    <div class="stat-mini y"><span class="val">0</span><span class="lbl">Y</span></div>
-                  </div>
-                </div>
-                <div class="summary-card">
-                  <div class="summary-title">看護師5</div>
-                  <div class="summary-stats">
-                    <div class="stat-mini d"><span class="val">14</span><span class="lbl">D</span></div>
-                    <div class="stat-mini n"><span class="val">8</span><span class="lbl">N</span></div>
-                    <div class="stat-mini a"><span class="val">8</span><span class="lbl">A</span></div>
-                    <div class="stat-mini o"><span class="val">1</span><span class="lbl">O</span></div>
-                    <div class="stat-mini y"><span class="val">0</span><span class="lbl">Y</span></div>
-                  </div>
-                </div>
-                <div class="summary-card">
-                  <div class="summary-title">主任1</div>
-                  <div class="summary-stats">
-                    <div class="stat-mini d"><span class="val">22</span><span class="lbl">D</span></div>
-                    <div class="stat-mini n"><span class="val">0</span><span class="lbl">N</span></div>
-                    <div class="stat-mini a"><span class="val">0</span><span class="lbl">A</span></div>
-                    <div class="stat-mini o"><span class="val">8</span><span class="lbl">O</span></div>
-                    <div class="stat-mini y"><span class="val">1</span><span class="lbl">Y</span></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="caption">▲ スタッフごとの集計カード。夜勤回数の偏りが一目瞭然</div>
+    <div class="s-body center">
+      <div class="comp-table">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th style="text-align: center;">📊 Excel手作業</th>
+              <th style="text-align: center;">💼 市販ソフト</th>
+              <th class="shiftmaker">📅 ShiftMaker</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="feature">月の作業時間</td>
+              <td class="cell">3〜5時間</td>
+              <td class="cell">30〜60分</td>
+              <td class="cell shiftmaker">⚡ 3分</td>
+            </tr>
+            <tr>
+              <td class="feature">初期費用</td>
+              <td class="cell">¥0</td>
+              <td class="cell">¥50,000〜</td>
+              <td class="cell shiftmaker">¥0</td>
+            </tr>
+            <tr>
+              <td class="feature">月額費用</td>
+              <td class="cell">¥0</td>
+              <td class="cell">¥5,000〜</td>
+              <td class="cell shiftmaker">¥0</td>
+            </tr>
+            <tr>
+              <td class="feature">スマホ対応</td>
+              <td class="cell"><span class="cross">×</span></td>
+              <td class="cell"><span class="partial">△</span></td>
+              <td class="cell shiftmaker"><span class="check">✓</span></td>
+            </tr>
+            <tr>
+              <td class="feature">自動最適化</td>
+              <td class="cell"><span class="cross">×</span></td>
+              <td class="cell"><span class="check">✓</span></td>
+              <td class="cell shiftmaker"><span class="check">✓</span></td>
+            </tr>
+            <tr>
+              <td class="feature">夜勤バランス自動均等化</td>
+              <td class="cell"><span class="cross">×</span></td>
+              <td class="cell"><span class="partial">△</span></td>
+              <td class="cell shiftmaker"><span class="check">✓</span></td>
+            </tr>
+            <tr>
+              <td class="feature">個人情報の安全性</td>
+              <td class="cell"><span class="partial">△</span> ファイル管理が必要</td>
+              <td class="cell"><span class="partial">△</span> 業者のサーバへ送信</td>
+              <td class="cell shiftmaker"><span class="check">✓</span> 端末内のみ</td>
+            </tr>
+            <tr>
+              <td class="feature">導入工数</td>
+              <td class="cell">テンプレート作成</td>
+              <td class="cell">契約 / 設定 / 研修</td>
+              <td class="cell shiftmaker">URLを開くだけ</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== SLIDE 11: Guide modal ========== -->
-<section class="slide">
-  <div class="slide-inner">
-    <div class="s-head">
-      <div class="s-eyebrow">SCREEN 7 / 7</div>
-      <div class="s-title">いつでも開ける「使い方ガイド」</div>
-    </div>
-    <div class="s-body">
-      <div class="col-left">
-        <div class="bullets" style="margin-top: 12px;">
-          <li>画面右上の <strong>「？ 使い方」</strong> ボタンから</li>
-          <li>6セクションの体系的ガイド</li>
-          <li>各タブの詳細解説 / FAQ / トラブル対処</li>
-          <li>シフト記号の意味も色付きで掲載</li>
-          <li>ガイドから該当タブに<strong>直接ジャンプ</strong>可能</li>
-          <li>さらに詳細な <strong>HTML 取扱説明書</strong> も同梱</li>
-        </div>
-      </div>
-      <div class="col-right">
-        <div class="mockup-wrap with-frame">
-          <div class="mockup-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-          <div class="mockup-screen" style="background: #f7f9fc;">
-            <div style="padding: 20px;">
-              <div style="background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12); overflow: hidden;">
-                <div style="background: linear-gradient(135deg, #4a90e2, #357abd); color: #fff; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
-                  <div>
-                    <div style="font-size: 17px; font-weight: 700;">使い方ガイド</div>
-                    <div style="font-size: 11px; opacity: 0.85;">ShiftMaker の操作と仕組み</div>
-                  </div>
-                  <div style="width: 28px; height: 28px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">×</div>
-                </div>
-                <div style="display: flex; gap: 4px; padding: 6px; background: #f7f9fc; border-bottom: 1px solid var(--border); overflow-x: auto;">
-                  <span style="padding: 6px 12px; background: var(--primary); color: #fff; border-radius: 6px; font-size: 11px; font-weight: 600;">🚀 全体の流れ</span>
-                  <span style="padding: 6px 12px; color: var(--text-soft); border-radius: 6px; font-size: 11px;">📑 各タブ</span>
-                  <span style="padding: 6px 12px; color: var(--text-soft); border-radius: 6px; font-size: 11px;">🎨 シフト記号</span>
-                  <span style="padding: 6px 12px; color: var(--text-soft); border-radius: 6px; font-size: 11px;">💡 コツ</span>
-                  <span style="padding: 6px 12px; color: var(--text-soft); border-radius: 6px; font-size: 11px;">🔒 データ</span>
-                  <span style="padding: 6px 12px; color: var(--text-soft); border-radius: 6px; font-size: 11px;">❓ FAQ</span>
-                </div>
-                <div style="padding: 16px 18px;">
-                  <div style="background: #f0f7ff; border-left: 3px solid var(--primary); padding: 10px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 11px;">
-                    スタッフ登録 → 希望入力 → 生成 → 確認、の順で進めます。全部で<strong>5〜10分</strong>で1ヶ月分のシフトが完成します。
-                  </div>
-                  <div style="display: flex; gap: 10px; background: #fafbfc; border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 6px; font-size: 11px;">
-                    <div style="width: 24px; height: 24px; background: var(--primary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0;">1</div>
-                    <div>
-                      <div style="font-weight: 600;">スタッフを登録</div>
-                      <div style="color: var(--text-soft); margin: 3px 0;">名前、夜勤可否、月の夜勤上限、連勤の上限を入力します。</div>
-                      <span style="display: inline-block; padding: 3px 10px; border: 1px solid var(--primary); color: var(--primary); border-radius: 12px; font-size: 10px;">スタッフ管理を開く →</span>
-                    </div>
-                  </div>
-                  <div style="display: flex; gap: 10px; background: #fafbfc; border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 11px;">
-                    <div style="width: 24px; height: 24px; background: var(--primary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0;">2</div>
-                    <div>
-                      <div style="font-weight: 600;">希望休・有給を入力</div>
-                      <div style="color: var(--text-soft); margin: 3px 0;">カレンダーをタップして、休みたい日や有給を取りたい日を指定します。</div>
-                      <span style="display: inline-block; padding: 3px 10px; border: 1px solid var(--primary); color: var(--primary); border-radius: 12px; font-size: 10px;">希望入力を開く →</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="caption">▲ アプリ内ガイドモーダル。6セクションで全機能を解説</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ========== SLIDE 12: Security ========== -->
+<!-- =========================================================
+     SLIDE 14: SECURITY
+========================================================= -->
 <section class="slide">
   <div class="slide-inner">
     <div class="s-head">
       <div class="s-eyebrow">SECURITY</div>
-      <div class="s-title">データはあなたの端末にだけ</div>
-      <div class="s-lead">看護師の名前や希望データなどの個人情報が、外に漏れる経路を物理的に持たない設計。</div>
+      <div class="s-title">看護師の名前、絶対に外に出ない設計</div>
+      <div class="s-lead">「クラウドだから心配」を、設計レベルで解決。データを<span class="hi">サーバに保存する仕組みそのものが存在しない</span>から、漏洩のしようがない。</div>
     </div>
     <div class="s-body center">
       <div class="feat-grid">
-        <div class="feat-card">
+        <div class="feat-card highlight">
           <div class="feat-icon">📱</div>
-          <div class="feat-title">端末内ローカル保存</div>
-          <div class="feat-desc">スタッフ名、希望、シフトはブラウザの<strong>localStorage</strong>のみに保存。サーバへ一切送信されない。</div>
+          <div class="feat-title">端末のみに保存</div>
+          <div class="feat-desc">スタッフ名・希望・シフトは、ブラウザのlocalStorageだけに保存。<strong>サーバへ送信されない、保存されない。</strong></div>
         </div>
         <div class="feat-card">
           <div class="feat-icon">🔐</div>
-          <div class="feat-title">HTTPS通信</div>
-          <div class="feat-desc">シフト生成時のみサーバと通信するが、結果受信後にデータは破棄される。<strong>サーバには残らない</strong>。</div>
+          <div class="feat-title">HTTPS暗号化</div>
+          <div class="feat-desc">通信はすべて暗号化。生成リクエストのみ送るが、計算後にデータは即廃棄。</div>
         </div>
         <div class="feat-card">
           <div class="feat-icon">🔢</div>
-          <div class="feat-title">PINコード保護</div>
-          <div class="feat-desc"><strong>SHA-256でハッシュ化</strong>して保存。原文は保存しない。万一の端末紛失時も中身が見えない。</div>
+          <div class="feat-title">PINで端末保護</div>
+          <div class="feat-desc">SHA-256で暗号化保存。原文は残らない。スマホ紛失時も中身は見えない。</div>
         </div>
         <div class="feat-card">
           <div class="feat-icon">👥</div>
-          <div class="feat-title">ユーザー間の分離</div>
-          <div class="feat-desc">同じURL利用者でも、ワークスペースが違えばお互いのデータは<strong>完全に独立</strong>。覗き見不可。</div>
+          <div class="feat-title">ユーザー完全分離</div>
+          <div class="feat-desc">同じURLでもワークスペースごとに独立。他人のデータは見られない。</div>
         </div>
         <div class="feat-card">
           <div class="feat-icon">📜</div>
-          <div class="feat-title">アクセスログに残らない</div>
-          <div class="feat-desc">サーバはリクエスト本文をログ出力しない。スタッフ名がログに残ることはない。</div>
+          <div class="feat-title">ログに残らない</div>
+          <div class="feat-desc">サーバはリクエスト本文を一切ログ出力しない。アクセス記録に名前が残ることもない。</div>
         </div>
         <div class="feat-card">
           <div class="feat-icon">🚫</div>
           <div class="feat-title">第三者SDK不使用</div>
-          <div class="feat-desc">広告、アナリティクス、トラッカーなど外部サービス不使用。データを集める仕組みがない。</div>
+          <div class="feat-desc">広告、解析、トラッカー一切なし。データを集める仕組みがない。</div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== SLIDE 13: Multi-user ========== -->
+<!-- =========================================================
+     SLIDE 15: Effects — Time saved
+========================================================= -->
+<section class="slide big-number-slide">
+  <div class="slide-inner" style="justify-content: center; text-align: center;">
+    <div style="margin-bottom: 16px;">
+      <div class="s-eyebrow" style="text-align: center;">YOU GET BACK</div>
+    </div>
+    <div class="big-number">45</div>
+    <div class="big-number-unit">時間 / 年</div>
+    <div class="big-number-label">
+      年間 <span class="hi">丸2日分</span> の時間が浮きます。<br>
+      その時間で、何をしますか？
+    </div>
+    <div style="display: flex; gap: 20px; margin-top: 40px; justify-content: center; flex-wrap: wrap;">
+      <div style="background: #fff; border-radius: 12px; padding: 14px 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); font-size: 15px; color: var(--text);">☕ 患者ケアに集中する</div>
+      <div style="background: #fff; border-radius: 12px; padding: 14px 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); font-size: 15px; color: var(--text);">📚 教育・指導の時間</div>
+      <div style="background: #fff; border-radius: 12px; padding: 14px 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); font-size: 15px; color: var(--text);">🏠 早く帰宅する</div>
+      <div style="background: #fff; border-radius: 12px; padding: 14px 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); font-size: 15px; color: var(--text);">💪 自分の時間</div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 16: Voice (hypothetical)
+========================================================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="s-head">
+      <div class="s-eyebrow">VOICE</div>
+      <div class="s-title">使ってみた感想（想定シナリオ）</div>
+    </div>
+    <div class="s-body center column">
+      <div class="quote-block">
+        <div class="quote-text">
+          毎月、月末になると胃が痛くなっていたのが嘘みたい。
+          スマホで通勤中に希望休だけ入れて、職場に着いたら<strong>「生成」ボタン</strong>を押す。
+          コーヒー飲んでる間に完成してた。<br>
+          何より、<strong>夜勤の偏り問題でクレームが来なくなった</strong>のが本当にありがたい。
+        </div>
+        <div class="quote-author">
+          <div class="quote-avatar">👩‍⚕️</div>
+          <div>
+            <div class="quote-meta-name">看護師長Aさん</div>
+            <div class="quote-meta-role">内科病棟 / スタッフ10名</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SLIDE 17: Multi-user
+========================================================= -->
 <section class="slide">
   <div class="slide-inner">
     <div class="s-head">
       <div class="s-eyebrow">MULTI USER</div>
-      <div class="s-title">複数人で安全に共有</div>
-      <div class="s-lead">同じURLを共有しても、お互いのデータは見えません。ワークスペース機能で完全分離。</div>
+      <div class="s-title">病棟ごとに、安全に共有</div>
+      <div class="s-lead">同じURLでも、お互いのデータは見えません。複数病棟・複数管理者でも安心。</div>
     </div>
     <div class="s-body center">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; width: 100%; max-width: 1100px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; width: 100%; max-width: 1000px;">
         <div style="background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 28px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
-          <div style="font-size: 12px; color: var(--primary); font-weight: 700; letter-spacing: 0.12em; margin-bottom: 6px;">PATTERN A</div>
-          <div style="font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 14px;">各自が自分の端末で使う</div>
-          <div style="text-align: center; font-size: 64px; margin: 20px 0;">📱 📱 📱</div>
-          <ul class="bullets" style="font-size: 14px; line-height: 2;">
-            <li>看護師長Aさんは自分のスマホ</li>
-            <li>看護師長Bさんは自分のスマホ</li>
+          <div style="font-size: 12px; color: var(--primary); font-weight: 700; letter-spacing: 0.12em; margin-bottom: 6px;">パターンA</div>
+          <div style="font-size: 22px; font-weight: 800; margin-bottom: 14px;">各自が自分のスマホで</div>
+          <div style="text-align: center; font-size: 60px; margin: 16px 0;">📱 📱 📱</div>
+          <ul class="bullets" style="font-size: 14px; line-height: 1.9;">
+            <li>内科病棟長は自分のスマホ</li>
+            <li>外科病棟長は自分のスマホ</li>
             <li><strong>お互いに何も見えない</strong></li>
-            <li>URLを共有するだけ</li>
+            <li>URLを共有するだけでOK</li>
           </ul>
         </div>
         <div style="background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 28px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
-          <div style="font-size: 12px; color: var(--primary); font-weight: 700; letter-spacing: 0.12em; margin-bottom: 6px;">PATTERN B</div>
-          <div style="font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 14px;">1台のスマホを複数人で</div>
-          <div style="text-align: center; font-size: 64px; margin: 20px 0;">📱<br><span style="font-size: 32px;">👤👤👤</span></div>
-          <ul class="bullets" style="font-size: 14px; line-height: 2;">
+          <div style="font-size: 12px; color: var(--primary); font-weight: 700; letter-spacing: 0.12em; margin-bottom: 6px;">パターンB</div>
+          <div style="font-size: 22px; font-weight: 800; margin-bottom: 14px;">1台のPCを複数人で</div>
+          <div style="text-align: center; font-size: 60px; margin: 16px 0;">💻<br><span style="font-size: 28px;">👤👤👤</span></div>
+          <ul class="bullets" style="font-size: 14px; line-height: 1.9;">
             <li>1台にワークスペースを複数作成</li>
             <li>各人がPINを設定</li>
             <li>「👤名前」から切替</li>
@@ -1344,58 +1678,19 @@
   </div>
 </section>
 
-<!-- ========== SLIDE 14: Effects ========== -->
-<section class="slide">
-  <div class="slide-inner">
-    <div class="s-head">
-      <div class="s-eyebrow">EFFECTS</div>
-      <div class="s-title">導入効果</div>
-    </div>
-    <div class="s-body center">
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%;">
-        <div style="background: #fff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.04); border: 1px solid var(--border);">
-          <div style="font-size: 48px; font-weight: 900; color: var(--primary);">95%</div>
-          <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">作成時間の削減</div>
-          <div style="font-size: 12px; color: var(--text-soft); margin-top: 10px; line-height: 1.7;">数時間 → 数分<br>毎月の負担を激減</div>
-        </div>
-        <div style="background: #fff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.04); border: 1px solid var(--border);">
-          <div style="font-size: 48px; font-weight: 900; color: var(--primary);">¥0</div>
-          <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">月額コスト</div>
-          <div style="font-size: 12px; color: var(--text-soft); margin-top: 10px; line-height: 1.7;">無料で永続利用<br>サブスクなし</div>
-        </div>
-        <div style="background: #fff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.04); border: 1px solid var(--border);">
-          <div style="font-size: 48px; font-weight: 900; color: var(--primary);">0件</div>
-          <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">情報漏洩リスク</div>
-          <div style="font-size: 12px; color: var(--text-soft); margin-top: 10px; line-height: 1.7;">サーバ非保存<br>ローカル完結</div>
-        </div>
-        <div style="background: #fff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.04); border: 1px solid var(--border);">
-          <div style="font-size: 48px; font-weight: 900; color: var(--primary);">100%</div>
-          <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">公平性</div>
-          <div style="font-size: 12px; color: var(--text-soft); margin-top: 10px; line-height: 1.7;">夜勤バランスを<br>数値で見える化</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ========== SLIDE 15: Final ========== -->
+<!-- =========================================================
+     SLIDE 18: CTA / Final
+========================================================= -->
 <section class="slide slide-final">
-  <div class="slide-inner">
-    <div class="s-head">
-      <div class="s-eyebrow" style="color: rgba(255,255,255,0.7);">GET STARTED</div>
-      <div class="s-title">今すぐ使ってみる</div>
-      <div class="s-lead">スマホでアクセスして、ワークスペースを作るだけ。インストールも、登録もいりません。</div>
+  <div class="final-content">
+    <div style="font-size: 100px; margin-bottom: 16px;">📅</div>
+    <div class="final-title">3分後、<br>シフトはできている。</div>
+    <div style="font-size: 22px; opacity: 0.85; margin-top: 24px;">
+      今すぐスマホでアクセス。インストール不要、登録不要。
     </div>
-    <div class="s-body center column">
-      <div class="qr-fake">https://shiftmaker-s6fs.onrender.com</div>
-      <div style="margin-top: 32px; font-size: 14px; color: rgba(255,255,255,0.7);">
-        詳しい使い方は同梱の <code style="background: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px;">docs/使い方ガイド.html</code> を参照
-      </div>
-      <div style="margin-top: 48px; text-align: center;">
-        <div style="font-size: 64px; margin-bottom: 8px;">📅</div>
-        <div style="font-size: 24px; font-weight: 700;">ShiftMaker</div>
-        <div style="font-size: 14px; opacity: 0.8; margin-top: 4px;">看護師シフトを、3分で。</div>
-      </div>
+    <div class="url-pill">https://shiftmaker-s6fs.onrender.com</div>
+    <div style="margin-top: 32px; font-size: 13px; opacity: 0.6;">
+      詳しい使い方は <code style="background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 4px;">docs/使い方ガイド.html</code> を参照
     </div>
   </div>
 </section>
@@ -1405,9 +1700,9 @@
 <!-- Nav -->
 <div class="nav-controls">
   <button class="nav-btn" id="prev">‹</button>
-  <span class="nav-counter"><span id="cur">1</span> / <span id="total">15</span></span>
+  <span class="nav-counter"><span id="cur">1</span> / <span id="total">18</span></span>
   <button class="nav-btn" id="next">›</button>
-  <button class="nav-toggle" id="fullscreen" title="全画面切替">⛶</button>
+  <button class="nav-toggle" id="fullscreen" title="全画面切替 (F)">⛶</button>
 </div>
 
 <script>
@@ -1447,14 +1742,9 @@
     } else if (e.key === 'f' || e.key === 'F') {
       if (document.fullscreenElement) document.exitFullscreen();
       else document.documentElement.requestFullscreen();
-    } else if (/^[0-9]$/.test(e.key)) {
-      const n = parseInt(e.key, 10);
-      if (n === 0) show(9);
-      else show(n - 1);
     }
   });
 
-  // Touch swipe
   let touchX = null;
   document.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; });
   document.addEventListener('touchend', (e) => {
@@ -1466,7 +1756,6 @@
     touchX = null;
   });
 
-  // Initial progress
   document.getElementById('progress').style.width = (1 / total * 100) + '%';
 </script>
 
