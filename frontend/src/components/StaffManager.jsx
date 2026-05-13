@@ -464,7 +464,7 @@ export default function StaffManager() {
         <div className="staff-list-header" style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
           <span className="staff-list-title">出勤ペア制約</span>
           <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-            「同シフトNG」= 同じシフトに同時アサイン禁止（明け+日勤の被りはOK）／ 「同日マスト」= 必ず同日出勤
+            「夜勤NG」= 同じ日に2人とも夜勤させない（日勤や明けの被りはOK）／ 「同日マスト」= 必ず同日出勤
           </span>
         </div>
 
@@ -501,7 +501,7 @@ export default function StaffManager() {
                 onChange={(e) => setPairForm({ ...pairForm, type: e.target.value })}
                 className="pair-select"
               >
-                <option value="forbid">同シフトNG（丸被りさせない）</option>
+                <option value="forbid">夜勤NG（同日に2人とも夜勤させない）</option>
                 <option value="require">同日マスト（必ず同日出勤）</option>
               </select>
               <button className="btn btn-primary btn-sm" onClick={submitPair}>追加</button>
@@ -518,7 +518,7 @@ export default function StaffManager() {
                   <li key={p.id} className={`pair-item ${p.type === 'forbid' ? 'pair-forbid' : 'pair-require'}`}>
                     <span className="pair-names">
                       <strong>{staffNameById(p.staff_a_id)}</strong>
-                      <span className="pair-rel">{p.type === 'forbid' ? '✕ 同シフトNG' : '◯ 同日マスト'}</span>
+                      <span className="pair-rel">{p.type === 'forbid' ? '✕ 夜勤NG' : '◯ 同日マスト'}</span>
                       <strong>{staffNameById(p.staff_b_id)}</strong>
                     </span>
                     <button className="btn btn-danger btn-sm" onClick={() => removePair(p.id)}>削除</button>

@@ -225,9 +225,8 @@ def solve(request: GenerateRequest) -> dict:
                     model.add(x[sid][d][SHIFT_O] == 1)
 
     # Hard constraint 11: ペア制約
-    #   forbid  = 同じシフトコードへの同日アサインを禁止（=「丸被り」禁止）
-    #              例: 両者とも D は不可、両者とも N は不可。
-    #              ただし D+A、A+N、D+L、D+O などの組合せはOK。
+    #   forbid  = 同じ日に両者が「夜勤(N)」になるのを禁止。
+    #              日勤や明け・早番・遅番の被りはOK、夜勤の丸被りのみNG。
     #   require = 同日出勤マスト（両方とも O/Y でない、または両方とも O/Y）
     for pair in request.pairs:
         a_id = pair.staff_a_id
@@ -236,9 +235,8 @@ def solve(request: GenerateRequest) -> dict:
             continue
         for d in days:
             if pair.type == "forbid":
-                # 各「勤務シフト」について、両者が同じシフトに同時にアサインされない
-                for sc in WORK_SHIFT_CODES:
-                    model.add(x[a_id][d][sc] + x[b_id][d][sc] <= 1)
+                # 夜勤同時アサインを禁止
+                model.add(x[a_id][d][SHIFT_N] + x[b_id][d][SHIFT_N] <= 1)
             elif pair.type == "require":
                 a_works = sum(x[a_id][d][sc] for sc in WORK_SHIFT_CODES)
                 b_works = sum(x[b_id][d][sc] for sc in WORK_SHIFT_CODES)
