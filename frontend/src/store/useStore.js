@@ -12,9 +12,11 @@ const MAX_STORED_MONTHS = 3  // 直近3ヶ月分のスケジュールを保持
 
 const DEFAULT_SHIFT_TYPES = [
   { code: 'D', name: '日勤', color: '#4CAF50' },
+  { code: 'E', name: '早番', color: '#26C6DA' },
   { code: 'N', name: '夜勤', color: '#9C27B0' },
   { code: 'A', name: '明け', color: '#FF9800' },
-  { code: 'O', name: '休み', color: '#9E9E9E' },
+  { code: 'L', name: '遅番', color: '#5C6BC0' },
+  { code: 'O', name: '休日', color: '#9E9E9E' },
   { code: 'Y', name: '有給', color: '#2196F3' },
 ]
 
@@ -29,6 +31,7 @@ const useStore = create(
       staff: [],
       wishes: [],
       dayConditions: [],
+      pairs: [],
       shiftTypes: DEFAULT_SHIFT_TYPES,
       year: new Date().getFullYear(),
       month: new Date().getMonth() + 1,
@@ -51,7 +54,7 @@ const useStore = create(
           staff: [...state.staff, { ...staffMember, id: `s_${Date.now()}` }],
         })),
 
-      addStaffBulk: ({ role, count, night_available, max_night, max_consecutive_days }) =>
+      addStaffBulk: ({ role, count, night_available, max_night, max_consecutive_days, is_rookie = false, can_lead = false }) =>
         set((state) => {
           const base = (role || '').trim() || 'スタッフ'
           // 既に同じ役職で生成済みの番号を見て、続きから採番する
@@ -75,6 +78,8 @@ const useStore = create(
               night_available,
               max_night,
               max_consecutive_days,
+              is_rookie,
+              can_lead,
             })
             usedNumbers.add(nextNum)
             nextNum += 1
@@ -91,7 +96,25 @@ const useStore = create(
         set((state) => ({
           staff: state.staff.filter((s) => s.id !== id),
           wishes: state.wishes.filter((w) => w.staff_id !== id),
+          pairs: state.pairs.filter((p) => p.staff_a_id !== id && p.staff_b_id !== id),
         })),
+
+      // ── ペア制約 ──
+      addPair: (pair) =>
+        set((state) => {
+          // 既存の同一ペア（順序不問）があれば置き換え
+          const filtered = state.pairs.filter(
+            (p) =>
+              !(
+                (p.staff_a_id === pair.staff_a_id && p.staff_b_id === pair.staff_b_id) ||
+                (p.staff_a_id === pair.staff_b_id && p.staff_b_id === pair.staff_a_id)
+              )
+          )
+          return { pairs: [...filtered, { ...pair, id: `pair_${Date.now()}` }] }
+        }),
+
+      removePair: (id) =>
+        set((state) => ({ pairs: state.pairs.filter((p) => p.id !== id) })),
 
       // ── 希望 ──
       addWish: (wish) =>
@@ -265,6 +288,7 @@ const useStore = create(
           staff: [],
           wishes: [],
           dayConditions: [],
+          pairs: [],
           schedules: {},
           schedule: null,
           summary: null,
@@ -276,6 +300,7 @@ const useStore = create(
         staff: state.staff,
         wishes: state.wishes,
         dayConditions: state.dayConditions,
+        pairs: state.pairs,
         year: state.year,
         month: state.month,
         shiftTypes: state.shiftTypes,

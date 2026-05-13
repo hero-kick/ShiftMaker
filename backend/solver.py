@@ -3,12 +3,19 @@ from ortools.sat.python import cp_model
 from models import GenerateRequest
 
 
-SHIFT_CODES = ["D", "N", "A", "O", "Y"]
-SHIFT_D = "D"
-SHIFT_N = "N"
-SHIFT_A = "A"
-SHIFT_O = "O"
-SHIFT_Y = "Y"
+SHIFT_CODES = ["D", "E", "N", "A", "L", "O", "Y"]
+SHIFT_D = "D"   # 日勤
+SHIFT_E = "E"   # 早番
+SHIFT_N = "N"   # 夜勤（入り）
+SHIFT_A = "A"   # 夜勤（明け）
+SHIFT_L = "L"   # 遅番
+SHIFT_O = "O"   # 休日
+SHIFT_Y = "Y"   # 有給
+
+# 「出勤扱い」のシフトコード（O / Y 以外）
+WORK_SHIFT_CODES = [SHIFT_D, SHIFT_E, SHIFT_N, SHIFT_A, SHIFT_L]
+# 「日勤系」（連勤カウント対象）
+DAY_WORK_SHIFTS = [SHIFT_D, SHIFT_E, SHIFT_L]
 
 DEFAULT_N_PER_DAY = 2
 DEFAULT_D_PER_DAY = 3
@@ -217,6 +224,34 @@ def solve(request: GenerateRequest) -> dict:
                 if sid in staff_ids:
                     model.add(x[sid][d][SHIFT_O] == 1)
 
+    # Hard constraint 11: ペア制約（同時出勤 NG / マスト）
+    # 「出勤している」= O でも Y でもない（= sum(x[work_shift_codes]) == 1）
+    for pair in request.pairs:
+        a_id = pair.staff_a_id
+        b_id = pair.staff_b_id
+        if a_id not in staff_ids or b_id not in staff_ids:
+            continue
+        for d in days:
+            a_works = sum(x[a_id][d][sc] for sc in WORK_SHIFT_CODES)
+            b_works = sum(x[b_id][d][sc] for sc in WORK_SHIFT_CODES)
+            if pair.type == "forbid":
+                # 両方が「出勤」になることを禁止
+                model.add(a_works + b_works <= 1)
+            elif pair.type == "require":
+                # 両方が出勤、または両方が休/有給。 a_works == b_works
+                model.add(a_works == b_works)
+
+    # Hard constraint 12: リーダー必須（can_lead=True なスタッフが1人以上いる日のみ強制）
+    # 病棟は毎日 1 人リーダーが必要 → リーダー資格者が最低1名出勤
+    leader_ids = [sid for sid in staff_ids if staff_map[sid].can_lead]
+    if leader_ids:
+        for d in days:
+            # 少なくとも 1 人のリーダーが出勤（O でも Y でもない）
+            leader_working = sum(
+                x[lid][d][sc] for lid in leader_ids for sc in WORK_SHIFT_CODES
+            )
+            model.add(leader_working >= 1)
+
     # Collect penalty terms for soft constraints
     penalty_terms = []
 
@@ -249,8 +284,9 @@ def solve(request: GenerateRequest) -> dict:
                 model.add(x[sid][d + 1][SHIFT_O] == 1).only_enforce_if(not_off_after_a.negated())
                 penalty_terms.append(both * 20)
 
-    # Soft constraint 3: Avoid long consecutive working days (D or N counts as work)
-    work_shifts = [SHIFT_D, SHIFT_N]
+    # Soft constraint 3: Avoid long consecutive working days
+    # D / E / L / N をすべて「勤務日」として連勤カウント
+    work_shifts = [SHIFT_D, SHIFT_E, SHIFT_L, SHIFT_N]
     for sid in staff_ids:
         s = staff_map[sid]
         max_consec = s.max_consecutive_days
@@ -283,18 +319,17 @@ def solve(request: GenerateRequest) -> dict:
             penalty_terms.append(dev_neg * 15)
 
     # Soft constraint 5: Prefer off days for non-night staff to balance workload
-    # Night-unavailable staff get penalized for too many consecutive D shifts
+    # Night-unavailable staff get penalized for too many consecutive day-work (D/E/L)
     for sid in staff_ids:
         s = staff_map[sid]
         if not s.night_available:
-            # Add extra penalty for them to get enough off days
             for d in days:
                 if d + 4 <= num_days:
                     window_days = list(range(d, d + 5))
-                    all_d = sum(x[sid][dd][SHIFT_D] for dd in window_days)
+                    all_day = sum(x[sid][dd][sc] for dd in window_days for sc in DAY_WORK_SHIFTS)
                     all_work = model.new_bool_var(f"all5d_{sid}_{d}")
-                    model.add(all_d >= 5).only_enforce_if(all_work)
-                    model.add(all_d <= 4).only_enforce_if(all_work.negated())
+                    model.add(all_day >= 5).only_enforce_if(all_work)
+                    model.add(all_day <= 4).only_enforce_if(all_work.negated())
                     penalty_terms.append(all_work * 100)
 
     # Objective: minimize total penalty
@@ -314,10 +349,7 @@ def solve(request: GenerateRequest) -> dict:
     if status in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
         for sid in staff_ids:
             schedule[sid] = {}
-            night_count = 0
-            off_count = 0
-            paid_leave_count = 0
-            work_count = 0
+            counts = {sc: 0 for sc in SHIFT_CODES}
 
             for d in days:
                 date_str = f"{year:04d}-{month:02d}-{d:02d}"
@@ -327,22 +359,19 @@ def solve(request: GenerateRequest) -> dict:
                         assigned = sc
                         break
                 schedule[sid][date_str] = assigned
+                counts[assigned] += 1
 
-                if assigned == SHIFT_N:
-                    night_count += 1
-                elif assigned == SHIFT_O:
-                    off_count += 1
-                elif assigned == SHIFT_Y:
-                    paid_leave_count += 1
-                elif assigned in [SHIFT_D, SHIFT_A]:
-                    work_count += 1
-
+            # 既存フィールドを維持しつつ新シフトの内訳も返す
             summary[sid] = {
                 "name": staff_map[sid].name,
-                "night_count": night_count,
-                "off_count": off_count,
-                "paid_leave_count": paid_leave_count,
-                "work_count": work_count,
+                "night_count": counts[SHIFT_N],
+                "off_count": counts[SHIFT_O],
+                "paid_leave_count": counts[SHIFT_Y],
+                "work_count": counts[SHIFT_D] + counts[SHIFT_E] + counts[SHIFT_L] + counts[SHIFT_A],
+                "day_count": counts[SHIFT_D],
+                "early_count": counts[SHIFT_E],
+                "late_count": counts[SHIFT_L],
+                "ake_count": counts[SHIFT_A],
                 "total_days": num_days,
             }
 

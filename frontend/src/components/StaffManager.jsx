@@ -20,6 +20,8 @@ const defaultForm = {
   night_available: true,
   max_night: 8,
   max_consecutive_days: 5,
+  is_rookie: false,
+  can_lead: false,
 }
 
 const defaultBulkForm = {
@@ -28,10 +30,12 @@ const defaultBulkForm = {
   night_available: true,
   max_night: 8,
   max_consecutive_days: 5,
+  is_rookie: false,
+  can_lead: false,
 }
 
 export default function StaffManager() {
-  const { staff, addStaff, addStaffBulk, updateStaff, removeStaff } = useStore()
+  const { staff, pairs, addStaff, addStaffBulk, updateStaff, removeStaff, addPair, removePair } = useStore()
   const [form, setForm] = useState(defaultForm)
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
@@ -40,6 +44,26 @@ export default function StaffManager() {
   const [bulkOpen, setBulkOpen] = useState(false)
   const [bulkForm, setBulkForm] = useState(defaultBulkForm)
   const [bulkError, setBulkError] = useState('')
+
+  // ペア制約フォーム
+  const [pairForm, setPairForm] = useState({ a: '', b: '', type: 'forbid' })
+  const [pairError, setPairError] = useState('')
+
+  const submitPair = () => {
+    setPairError('')
+    if (!pairForm.a || !pairForm.b) {
+      setPairError('2名を選択してください')
+      return
+    }
+    if (pairForm.a === pairForm.b) {
+      setPairError('同じスタッフは選べません')
+      return
+    }
+    addPair({ staff_a_id: pairForm.a, staff_b_id: pairForm.b, type: pairForm.type })
+    setPairForm({ a: '', b: '', type: pairForm.type })
+  }
+
+  const staffNameById = (id) => staff.find((s) => s.id === id)?.name || '?'
 
   const isMobile = useIsMobile()
 
@@ -159,6 +183,18 @@ export default function StaffManager() {
             全員 夜勤可能
           </label>
         </div>
+        <div className="form-group checkbox-group">
+          <label>
+            <input type="checkbox" name="can_lead" checked={bulkForm.can_lead} onChange={handleBulkChange} />
+            全員 リーダー可能
+          </label>
+        </div>
+        <div className="form-group checkbox-group">
+          <label>
+            <input type="checkbox" name="is_rookie" checked={bulkForm.is_rookie} onChange={handleBulkChange} />
+            全員 新人
+          </label>
+        </div>
         <button type="submit" className="btn btn-primary">{bulkForm.count}名 一括追加</button>
       </div>
       {bulkError && <p className="error-msg">{bulkError}</p>}
@@ -189,6 +225,18 @@ export default function StaffManager() {
           <label>
             <input type="checkbox" name="night_available" checked={form.night_available} onChange={handleChange} />
             夜勤可能
+          </label>
+        </div>
+        <div className="form-group checkbox-group">
+          <label>
+            <input type="checkbox" name="can_lead" checked={form.can_lead} onChange={handleChange} />
+            リーダー可能
+          </label>
+        </div>
+        <div className="form-group checkbox-group">
+          <label>
+            <input type="checkbox" name="is_rookie" checked={form.is_rookie} onChange={handleChange} />
+            新人
           </label>
         </div>
         <button type="submit" className="btn btn-primary">追加</button>
@@ -302,9 +350,19 @@ export default function StaffManager() {
                       <label>連続上限</label>
                       <input type="number" name="max_consecutive_days" value={editForm.max_consecutive_days} onChange={handleEditChange} min="1" max="14" className="inline-input narrow" />
                     </div>
+                  </div>
+                  <div className="staff-card-row" style={{ flexWrap: 'wrap', gap: 8 }}>
                     <label className="staff-card-checkbox">
                       <input type="checkbox" name="night_available" checked={editForm.night_available} onChange={handleEditChange} />
                       夜勤可
+                    </label>
+                    <label className="staff-card-checkbox">
+                      <input type="checkbox" name="can_lead" checked={!!editForm.can_lead} onChange={handleEditChange} />
+                      リーダー可
+                    </label>
+                    <label className="staff-card-checkbox">
+                      <input type="checkbox" name="is_rookie" checked={!!editForm.is_rookie} onChange={handleEditChange} />
+                      新人
                     </label>
                   </div>
                   <div className="staff-card-actions">
@@ -319,9 +377,13 @@ export default function StaffManager() {
                       <span className="staff-card-name">{s.name}</span>
                       {s.role && <span className="staff-card-role">{s.role}</span>}
                     </div>
-                    <span className={`badge ${s.night_available ? 'badge-success' : 'badge-gray'}`}>
-                      {s.night_available ? '夜勤可' : '日勤のみ'}
-                    </span>
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                      <span className={`badge ${s.night_available ? 'badge-success' : 'badge-gray'}`}>
+                        {s.night_available ? '夜勤可' : '日勤のみ'}
+                      </span>
+                      {s.can_lead && <span className="badge badge-lead">リーダー可</span>}
+                      {s.is_rookie && <span className="badge badge-rookie">新人</span>}
+                    </div>
                   </div>
                   <div className="staff-card-bottom">
                     <div className="staff-card-details">
@@ -347,6 +409,7 @@ export default function StaffManager() {
                   <th>名前</th>
                   <th>役職</th>
                   <th>夜勤可能</th>
+                  <th>リーダー可</th>
                   <th>夜勤上限</th>
                   <th>連続勤務上限</th>
                   <th>操作</th>
@@ -356,9 +419,15 @@ export default function StaffManager() {
                 {staff.map((s) =>
                   editingId === s.id ? (
                     <tr key={s.id} className="editing-row">
-                      <td><input type="text" name="name" value={editForm.name} onChange={handleEditChange} className="inline-input" /></td>
+                      <td>
+                        <input type="text" name="name" value={editForm.name} onChange={handleEditChange} className="inline-input" />
+                        <label style={{ fontSize: 11, marginLeft: 6 }}>
+                          <input type="checkbox" name="is_rookie" checked={!!editForm.is_rookie} onChange={handleEditChange} /> 新人
+                        </label>
+                      </td>
                       <td><input type="text" name="role" value={editForm.role || ''} onChange={handleEditChange} className="inline-input" /></td>
                       <td><input type="checkbox" name="night_available" checked={editForm.night_available} onChange={handleEditChange} /></td>
+                      <td><input type="checkbox" name="can_lead" checked={!!editForm.can_lead} onChange={handleEditChange} /></td>
                       <td><input type="number" name="max_night" value={editForm.max_night} onChange={handleEditChange} min="0" max="20" className="inline-input narrow" /></td>
                       <td><input type="number" name="max_consecutive_days" value={editForm.max_consecutive_days} onChange={handleEditChange} min="1" max="14" className="inline-input narrow" /></td>
                       <td>
@@ -368,9 +437,13 @@ export default function StaffManager() {
                     </tr>
                   ) : (
                     <tr key={s.id}>
-                      <td className="staff-name">{s.name}</td>
+                      <td className="staff-name">
+                        {s.name}
+                        {s.is_rookie && <span className="badge badge-rookie" style={{ marginLeft: 6 }}>新人</span>}
+                      </td>
                       <td>{s.role || '-'}</td>
                       <td><span className={`badge ${s.night_available ? 'badge-success' : 'badge-gray'}`}>{s.night_available ? '可' : '不可'}</span></td>
+                      <td>{s.can_lead ? <span className="badge badge-lead">可</span> : <span className="badge badge-gray">-</span>}</td>
                       <td>{s.max_night}回</td>
                       <td>{s.max_consecutive_days}日</td>
                       <td>
@@ -383,6 +456,77 @@ export default function StaffManager() {
               </tbody>
             </table>
           </div>
+        )}
+      </div>
+
+      {/* === ペア制約セクション === */}
+      <div className={isMobile ? '' : 'card'} style={{ marginTop: 16 }}>
+        <div className="staff-list-header" style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+          <span className="staff-list-title">出勤ペア制約</span>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+            「絶対に一緒に出勤させない」「必ず同日出勤」を指定
+          </span>
+        </div>
+
+        {staff.length < 2 ? (
+          <p className="empty-msg" style={{ marginTop: 12 }}>
+            スタッフを2名以上登録するとペアを設定できます。
+          </p>
+        ) : (
+          <>
+            <div className="pair-add-row">
+              <select
+                value={pairForm.a}
+                onChange={(e) => setPairForm({ ...pairForm, a: e.target.value })}
+                className="pair-select"
+              >
+                <option value="">スタッフA</option>
+                {staff.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+              <span style={{ color: 'var(--text-secondary)' }}>と</span>
+              <select
+                value={pairForm.b}
+                onChange={(e) => setPairForm({ ...pairForm, b: e.target.value })}
+                className="pair-select"
+              >
+                <option value="">スタッフB</option>
+                {staff.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+              <select
+                value={pairForm.type}
+                onChange={(e) => setPairForm({ ...pairForm, type: e.target.value })}
+                className="pair-select"
+              >
+                <option value="forbid">同日NG（同時出勤させない）</option>
+                <option value="require">同日マスト（必ず同日出勤）</option>
+              </select>
+              <button className="btn btn-primary btn-sm" onClick={submitPair}>追加</button>
+            </div>
+            {pairError && <p className="error-msg">{pairError}</p>}
+
+            {pairs.length === 0 ? (
+              <p className="empty-msg" style={{ marginTop: 12 }}>
+                ペアはまだ設定されていません。
+              </p>
+            ) : (
+              <ul className="pair-list">
+                {pairs.map((p) => (
+                  <li key={p.id} className={`pair-item ${p.type === 'forbid' ? 'pair-forbid' : 'pair-require'}`}>
+                    <span className="pair-names">
+                      <strong>{staffNameById(p.staff_a_id)}</strong>
+                      <span className="pair-rel">{p.type === 'forbid' ? '✕ 同日NG' : '◯ 同日マスト'}</span>
+                      <strong>{staffNameById(p.staff_b_id)}</strong>
+                    </span>
+                    <button className="btn btn-danger btn-sm" onClick={() => removePair(p.id)}>削除</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
         )}
       </div>
     </div>

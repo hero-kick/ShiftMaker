@@ -3279,6 +3279,62 @@ tr:hover td {
   color: #fff;
 }
 
+/* Pair constraint section */
+.pair-add-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 14px 12px;
+  background: #fafbfc;
+  border: 1px solid #edf2f7;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+.pair-select {
+  padding: 6px 10px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  min-width: 120px;
+  font-family: inherit;
+}
+.pair-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pair-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  gap: 8px;
+}
+.pair-item.pair-forbid { background: #fff5f5; border-left: 4px solid #e53935; }
+.pair-item.pair-require { background: #f0fdf4; border-left: 4px solid #22c55e; }
+.pair-names { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pair-item.pair-forbid .pair-rel { color: #c53030; font-weight: 700; font-size: 12px; }
+.pair-item.pair-require .pair-rel { color: #15803d; font-weight: 700; font-size: 12px; }
+
+/* New badges */
+.badge.badge-lead {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+.badge.badge-rookie {
+  background: #ddd6fe;
+  color: #6b21a8;
+  border: 1px solid #c4b5fd;
+}
+
 /* Empty staff state */
 .empty-staff {
   text-align: center;

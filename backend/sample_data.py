@@ -4,9 +4,11 @@ from datetime import date
 
 DEFAULT_SHIFT_TYPES = [
     {"code": "D", "name": "日勤", "color": "#4CAF50"},
+    {"code": "E", "name": "早番", "color": "#26C6DA"},
     {"code": "N", "name": "夜勤", "color": "#9C27B0"},
     {"code": "A", "name": "明け", "color": "#FF9800"},
-    {"code": "O", "name": "休み", "color": "#9E9E9E"},
+    {"code": "L", "name": "遅番", "color": "#5C6BC0"},
+    {"code": "O", "name": "休日", "color": "#9E9E9E"},
     {"code": "Y", "name": "有給", "color": "#2196F3"},
 ]
 

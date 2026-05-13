@@ -16,8 +16,8 @@ function useIsMobile(breakpoint = 768) {
 }
 
 const DAY_NAMES_SHORT = ['日', '月', '火', '水', '木', '金', '土']
-const SHIFT_CODES = ['D', 'N', 'A', 'O', 'Y']
-const SHIFT_NAMES = { D: '日勤', N: '夜勤', A: '明け', O: '休み', Y: '有給' }
+const SHIFT_CODES = ['D', 'E', 'N', 'A', 'L', 'O', 'Y']
+const SHIFT_NAMES = { D: '日勤', E: '早番', N: '夜勤', A: '明け', L: '遅番', O: '休日', Y: '有給' }
 
 function exportCSV(staff, schedule, days, year, month) {
   const header = [

@@ -9,6 +9,15 @@ class Staff(BaseModel):
     night_available: bool = True
     max_night: int = 8
     max_consecutive_days: int = 5
+    is_rookie: bool = False      # 新人フラグ（表示用 / 将来の制約用）
+    can_lead: bool = False       # リーダー業務が可能か
+
+
+class StaffPair(BaseModel):
+    """ペア制約: 2人の同時出勤を強制 or 禁止する"""
+    staff_a_id: str
+    staff_b_id: str
+    type: str  # "forbid" (絶対に同時出勤させない) or "require" (絶対に同時出勤させる)
 
 
 class ShiftType(BaseModel):
@@ -41,6 +50,7 @@ class GenerateRequest(BaseModel):
     month: int
     # 前月末日のシフト（staff_id -> shift_code）。N の場合は当月1日をA強制
     prev_last_shifts: dict[str, str] = Field(default_factory=dict)
+    pairs: list[StaffPair] = Field(default_factory=list)
 
 
 class ShiftResult(BaseModel):

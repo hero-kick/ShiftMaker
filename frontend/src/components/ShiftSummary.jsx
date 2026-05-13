@@ -64,6 +64,8 @@ export default function ShiftSummary() {
       off_count: shifts.filter((sc) => sc === 'O').length,
       paid_leave_count: shifts.filter((sc) => sc === 'Y').length,
       work_count: shifts.filter((sc) => sc === 'D').length,
+      early_count: shifts.filter((sc) => sc === 'E').length,
+      late_count: shifts.filter((sc) => sc === 'L').length,
       total_days: numDays,
     }
   })
@@ -244,6 +246,12 @@ export default function ShiftSummary() {
                     <span className="summary-stat-value" style={{ color: '#4CAF50' }}>{row.work_count}</span>
                     <span className="summary-stat-label">日勤</span>
                   </div>
+                  {row.early_count > 0 && (
+                    <div className="summary-stat">
+                      <span className="summary-stat-value" style={{ color: '#26C6DA' }}>{row.early_count}</span>
+                      <span className="summary-stat-label">早番</span>
+                    </div>
+                  )}
                   <div className="summary-stat">
                     <span className="summary-stat-value" style={{ color: '#9C27B0' }}>{row.night_count}</span>
                     <span className="summary-stat-label">夜勤</span>
@@ -252,6 +260,12 @@ export default function ShiftSummary() {
                     <span className="summary-stat-value" style={{ color: '#FF9800' }}>{row.ake_count}</span>
                     <span className="summary-stat-label">明け</span>
                   </div>
+                  {row.late_count > 0 && (
+                    <div className="summary-stat">
+                      <span className="summary-stat-value" style={{ color: '#5C6BC0' }}>{row.late_count}</span>
+                      <span className="summary-stat-label">遅番</span>
+                    </div>
+                  )}
                   <div className="summary-stat">
                     <span className="summary-stat-value" style={{ color: '#9E9E9E' }}>{row.off_count}</span>
                     <span className="summary-stat-label">休日</span>
