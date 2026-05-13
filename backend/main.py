@@ -51,6 +51,15 @@ def get_sample():
 
 
 # 本番用: フロントエンド静的ファイル配信（Dockerビルド時に配置）
+# Vite はファイル名にハッシュを付ける（例: index-ABC123.js）ので /assets/* は長期キャッシュOK。
+# index.html はハッシュなしなのでキャッシュさせると新バンドルへ切り替わらない → no-cache。
+NO_CACHE_HEADERS = {
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
+LONG_CACHE_HEADERS = {"Cache-Control": "public, max-age=31536000, immutable"}
+
 if STATIC_DIR.exists():
     app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
 
@@ -59,5 +68,8 @@ if STATIC_DIR.exists():
         """SPAのフォールバック: 全パスをindex.htmlに"""
         file_path = STATIC_DIR / full_path
         if file_path.is_file():
-            return FileResponse(file_path)
-        return FileResponse(STATIC_DIR / "index.html")
+            # 静的ファイル（ハッシュ付き）は長期キャッシュ。index.html はキャッシュ無効。
+            if file_path.name == "index.html":
+                return FileResponse(file_path, headers=NO_CACHE_HEADERS)
+            return FileResponse(file_path, headers=LONG_CACHE_HEADERS)
+        return FileResponse(STATIC_DIR / "index.html", headers=NO_CACHE_HEADERS)
