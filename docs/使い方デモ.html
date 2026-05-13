@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShiftMaker — 使い方デモ（アニメーション）</title>
+<style>
+  :root {
+    --primary: #4a90e2;
+    --primary-dark: #357abd;
+    --primary-glow: rgba(74,144,226,0.4);
+    --bg: #0d1421;
+    --text: #1a2332;
+    --text-soft: #5a6a7a;
+    --text-muted: #7a8a9a;
+    --border: #e2e8f0;
+    --d-shift: #4CAF50;
+    --n-shift: #9C27B0;
+    --a-shift: #FF9800;
+    --o-shift: #9E9E9E;
+    --y-shift: #2196F3;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg);
+    color: #e2e8f0;
+    font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== Layout ===== */
+  .app-page {
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+  }
+  .page-header {
+    padding: 14px 28px;
+    background: rgba(0,0,0,0.4);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-title {
+    font-size: 18px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff, #b3d9ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    overflow: hidden;
+  }
+
+  /* ===== Sidebar (chapter list) ===== */
+  .sidebar {
+    background: rgba(0,0,0,0.3);
+    border-right: 1px solid rgba(255,255,255,0.08);
+    padding: 20px 14px;
+    overflow-y: auto;
+  }
+  .sidebar-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 14px;
+    padding: 0 8px;
+  }
+  .chapter-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    transition: all 0.15s;
+  }
+  .chapter-item:hover { background: rgba(255,255,255,0.06); }
+  .chapter-item.active {
+    background: rgba(74,144,226,0.2);
+    border-left: 3px solid var(--primary);
+    padding-left: 9px;
+  }
+  .chapter-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .chapter-item.active .chapter-num { background: var(--primary); color: #fff; }
+  .chapter-item.done .chapter-num { background: rgba(76,175,80,0.4); color: #fff; }
+  .chapter-info { flex: 1; min-width: 0; }
+  .chapter-name {
+    font-size: 13px;
+    color: rgba(255,255,255,0.9);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .chapter-desc {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 2px;
+  }
+  .chapter-item.active .chapter-name { color: #fff; }
+
+  /* ===== Stage ===== */
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .phone-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
+  }
+
+  /* ===== Phone frame ===== */
+  .phone-frame {
+    width: 360px;
+    height: 720px;
+    background: #1a2332;
+    border-radius: 42px;
+    padding: 14px 8px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 2px rgba(255,255,255,0.05);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .phone-notch {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 22px;
+    background: #000;
+    border-radius: 0 0 16px 16px;
+    z-index: 10;
+  }
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border-radius: 30px;
+    overflow: hidden;
+    position: relative;
+  }
+  .status-bar {
+    height: 32px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px 0 16px;
+    font-size: 11px;
+    color: var(--text);
+    font-weight: 700;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 5;
+  }
+  .status-icons { display: flex; gap: 4px; align-items: center; font-size: 12px; }
+
+  /* ===== Cursor ===== */
+  .cursor {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    pointer-events: none;
+    z-index: 1000;
+    transition: left 1.2s cubic-bezier(0.4,0,0.2,1), top 1.2s cubic-bezier(0.4,0,0.2,1);
+    opacity: 0;
+  }
+  .cursor.visible { opacity: 1; }
+  .cursor::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(74,144,226,0.6), rgba(74,144,226,0));
+    border-radius: 50%;
+  }
+  .cursor::after {
+    content: '';
+    position: absolute;
+    inset: 7px;
+    background: rgba(74,144,226,0.9);
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .cursor.tap {
+    animation: tapPulse 0.5s ease-out;
+  }
+  .cursor.tap::before {
+    animation: tapRipple 0.6s ease-out;
+  }
+  @keyframes tapPulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(0.75); }
+    100% { transform: scale(1); }
+  }
+  @keyframes tapRipple {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+
+  /* ===== Scene ===== */
+  .scene {
+    position: absolute;
+    inset: 32px 0 0 0;
+    display: none;
+    flex-direction: column;
+    background: #fff;
+  }
+  .scene.active { display: flex; }
+
+  /* ===== Common app UI inside scene ===== */
+  .app-header {
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: #fff;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .app-logo { font-weight: 800; font-size: 14px; }
+  .ws-chip { background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 12px; font-size: 10px; }
+  .help-btn-m {
+    width: 28px; height: 28px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .month-sel-m { background: rgba(255,255,255,0.95); color: var(--text); padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+  .gen-btn-m { background: #fff; color: var(--primary); padding: 6px 12px; border-radius: 5px; font-weight: 700; font-size: 12px; }
+  .more-btn-m {
+    width: 28px; height: 28px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .app-body {
+    flex: 1;
+    overflow: hidden;
+    background: #f7f9fc;
+    padding: 12px;
+    position: relative;
+  }
+
+  .bottom-nav {
+    background: #fff;
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 6px 4px 8px;
+    flex-shrink: 0;
+  }
+  .nav-tab {
+    flex: 1;
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 10px;
+    color: var(--text-muted);
+    border-radius: 6px;
+    position: relative;
+  }
+  .nav-tab .step {
+    display: inline-block;
+    width: 16px; height: 16px;
+    background: rgba(74,144,226,0.15);
+    color: var(--primary);
+    border-radius: 50%;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 16px;
+    margin-bottom: 2px;
+  }
+  .nav-tab.active { color: var(--primary); }
+  .nav-tab.active .step { background: var(--primary); color: #fff; }
+
+  /* ===== Scene 1: Loading / opening ===== */
+  .loading-scene {
+    height: 100%;
+    background: linear-gradient(135deg, #f5f7fa, #e8ecf3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 32px;
+  }
+  .loading-scene .big-spinner {
+    width: 64px; height: 64px;
+    border: 5px solid rgba(74,144,226,0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--text-soft); font-size: 14px; }
+
+  /* ===== Scene 2: Workspace Gate ===== */
+  .gate-bg {
+    height: 100%;
+    background: linear-gradient(135deg, #f5f7fa, #e8ecf3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .gate-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 28px 24px;
+    width: 100%;
+    box-shadow: 0 16px 50px rgba(0,0,0,0.12);
+    animation: cardIn 0.6s ease-out 0.2s backwards;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .gate-title { text-align: center; font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+  .gate-sub { text-align: center; color: var(--text-muted); font-size: 12px; margin-bottom: 22px; }
+  .gate-field {
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text);
+    background: #fafbfc;
+    margin-bottom: 10px;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  .gate-field.focused {
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(74,144,226,0.15);
+  }
+  .gate-field .placeholder { color: var(--text-muted); }
+  .gate-field .typed { color: var(--text); }
+  .gate-field .cursor-blink {
+    display: inline-block;
+    width: 1.5px;
+    height: 16px;
+    background: var(--primary);
+    margin-left: 1px;
+    animation: blink 0.8s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .gate-btn {
+    background: var(--primary);
+    color: #fff;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+    margin-top: 8px;
+  }
+
+  /* ===== Scene 3: Onboarding ===== */
+  .onboarding-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(20,30,45,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .onboarding-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    animation: popIn 0.4s ease-out;
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.92) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .onboarding-icon { font-size: 44px; margin-bottom: 6px; }
+  .onboarding-title { font-size: 19px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+  .onboarding-lead { font-size: 12px; color: var(--text-soft); line-height: 1.6; margin-bottom: 14px; }
+  .onboarding-steps {
+    background: #f7f9fc;
+    border-radius: 8px;
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 12px;
+    color: var(--text);
+    margin-bottom: 16px;
+    line-height: 2;
+  }
+  .onboarding-steps strong { color: var(--primary); }
+  .onboarding-buttons { display: flex; gap: 8px; }
+  .ob-btn { flex: 1; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px; }
+  .ob-btn.primary { background: var(--primary); color: #fff; }
+  .ob-btn.secondary { background: #edf2f7; color: var(--text); }
+
+  /* ===== Scene 4: Bulk add staff ===== */
+  .form-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .form-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .form-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    font-weight: 700;
+  }
+  .bulk-hint {
+    background: #f0f7ff;
+    border-left: 3px solid var(--primary);
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .form-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .form-field { display: flex; flex-direction: column; gap: 4px; }
+  .form-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .form-input {
+    border: 1px solid var(--border);
+    background: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text);
+    min-height: 34px;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .form-input.focused {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(74,144,226,0.15);
+  }
+  .form-input .placeholder { color: var(--text-muted); }
+  .bulk-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    box-shadow: 0 4px 12px var(--primary-glow);
+  }
+  .staff-counter {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 10px 0 8px;
+    font-weight: 600;
+  }
+  .staff-counter .num {
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 14px;
+  }
+  .staff-list-m {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .staff-card-m {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 11px;
+    opacity: 0;
+  }
+  .staff-card-m.visible {
+    opacity: 1;
+    animation: slideUp 0.4s ease-out;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .staff-name-m { font-weight: 700; font-size: 12px; color: var(--text); }
+  .staff-role-m { color: var(--text-muted); font-size: 10px; }
+  .badge-mini { display: inline-block; padding: 1px 6px; background: #e0f5e8; color: #22863a; border-radius: 8px; font-size: 9px; margin-top: 3px; }
+
+  /* ===== Scene 5: Wish input ===== */
+  .staff-pills {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    margin-bottom: 10px;
+  }
+  .staff-pill {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    font-size: 11px;
+    color: var(--text);
+  }
+  .staff-pill.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 700; }
+  .wish-mode-buttons { display: flex; gap: 6px; margin-bottom: 10px; }
+  .wish-mode {
+    padding: 4px 10px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--text);
+  }
+  .wish-mode.active.off { background: #fff5f5; color: #c53030; border-color: #fed7d7; font-weight: 700; }
+  .wish-mode.active.paid { background: #ebf8ff; color: #2c5282; border-color: #bee3f8; font-weight: 700; }
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+    font-size: 10px;
+  }
+  .cal-head {
+    text-align: center;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 2px;
+    font-size: 9px;
+  }
+  .cal-cell {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px;
+    min-height: 32px;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .cal-cell .num { font-size: 9px; color: var(--text-muted); }
+  .cal-cell.thismonth .num { color: var(--text); }
+  .cal-cell.wish-off { background: #fff5f5; border-color: #fed7d7; }
+  .cal-cell.wish-off .num { color: #c53030; font-weight: 700; }
+  .cal-cell.wish-off::after { content: '希'; position: absolute; bottom: 2px; right: 3px; font-size: 8px; color: #c53030; font-weight: 700; }
+  .cal-cell.paid { background: #ebf8ff; border-color: #bee3f8; }
+  .cal-cell.paid .num { color: #2c5282; font-weight: 700; }
+
+  /* ===== Scene 6: Generate ===== */
+  .gen-loading {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .gen-loading .timer {
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .gen-loading .gen-label { color: var(--text-soft); font-size: 13px; font-weight: 600; }
+  .gen-loading .gen-progress {
+    width: 80%;
+    height: 6px;
+    background: #edf2f7;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .gen-loading .gen-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--d-shift));
+    width: 0%;
+  }
+  .gen-loading .gen-progress-bar.animating { animation: progressFill 6s linear forwards; }
+  @keyframes progressFill { to { width: 100%; } }
+  .gen-loading .gen-detail {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+
+  /* ===== Scene 7: Shift table ===== */
+  .shift-table-m {
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 9px;
+  }
+  .shift-row {
+    display: grid;
+    grid-template-columns: 50px repeat(10, 1fr);
+    border-bottom: 1px solid #edf2f7;
+  }
+  .shift-row:last-child { border-bottom: none; }
+  .shift-row > div {
+    padding: 4px 2px;
+    text-align: center;
+    border-right: 1px solid #edf2f7;
+  }
+  .shift-row > div:last-child { border-right: none; }
+  .shift-row.head > div { background: #edf2f7; color: var(--text-muted); font-weight: 700; font-size: 8px; }
+  .shift-row .shift-name {
+    text-align: left !important;
+    padding-left: 6px !important;
+    background: #f7f9fc;
+    font-weight: 700;
+    font-size: 9px;
+  }
+  .shift-cell-m { color: #fff; font-weight: 800; opacity: 0; }
+  .shift-cell-m.visible { opacity: 1; animation: cellPop 0.3s ease-out; }
+  @keyframes cellPop {
+    from { opacity: 0; transform: scale(0.7); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .shift-cell-m.d { background: var(--d-shift); }
+  .shift-cell-m.n { background: var(--n-shift); }
+  .shift-cell-m.a { background: var(--a-shift); }
+  .shift-cell-m.o { background: var(--o-shift); }
+  .shift-cell-m.y { background: var(--y-shift); }
+  .legend {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 9px;
+    flex-wrap: wrap;
+  }
+  .legend-item { color: #fff; padding: 2px 6px; border-radius: 3px; font-weight: 700; }
+
+  /* ===== Scene 8: Summary ===== */
+  .summary-list { display: flex; flex-direction: column; gap: 6px; }
+  .summary-card-m {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    opacity: 0;
+  }
+  .summary-card-m.visible {
+    opacity: 1;
+    animation: slideUp 0.4s ease-out;
+  }
+  .summary-name { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+  .summary-stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+  }
+  .summary-stat {
+    text-align: center;
+    padding: 4px;
+    border-radius: 4px;
+    font-size: 9px;
+  }
+  .summary-stat .val { display: block; font-weight: 800; font-size: 14px; line-height: 1.1; }
+  .summary-stat .lbl { font-size: 8px; opacity: 0.8; }
+  .summary-stat.d { background: rgba(76,175,80,0.15); color: #2e7d32; }
+  .summary-stat.n { background: rgba(156,39,176,0.15); color: #6a1b7c; }
+  .summary-stat.a { background: rgba(255,152,0,0.15); color: #b25f00; }
+  .summary-stat.o { background: rgba(158,158,158,0.15); color: #555; }
+  .summary-stat.y { background: rgba(33,150,243,0.15); color: #1565c0; }
+
+  /* ===== Scene 9: Done ===== */
+  .done-scene {
+    height: 100%;
+    background: linear-gradient(135deg, #4a90e2, #2c5fa5);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+    overflow: hidden;
+    position: relative;
+  }
+  .done-icon {
+    font-size: 80px;
+    animation: bounce 1s ease-out;
+  }
+  @keyframes bounce {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+  .done-title {
+    font-size: 32px;
+    font-weight: 900;
+    margin: 16px 0 8px;
+  }
+  .done-sub {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 24px;
+  }
+  .done-stat {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    padding: 14px 24px;
+    margin-bottom: 10px;
+  }
+  .done-stat .val { font-size: 28px; font-weight: 900; }
+  .done-stat .lbl { font-size: 11px; opacity: 0.8; }
+  .confetti {
+    position: absolute;
+    pointer-events: none;
+    animation: confettiFall 3s linear infinite;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(800px) rotate(720deg); opacity: 0; }
+  }
+
+  /* ===== Caption box ===== */
+  .caption-box {
+    margin-top: 18px;
+    width: 100%;
+    max-width: 700px;
+    padding: 18px 24px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    text-align: center;
+  }
+  .caption-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .caption-text {
+    font-size: 17px;
+    color: #fff;
+    font-weight: 600;
+    line-height: 1.6;
+    min-height: 28px;
+    transition: opacity 0.3s;
+  }
+  .caption-detail {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 6px;
+  }
+
+  /* ===== Controls ===== */
+  .controls {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0,0,0,0.4);
+    padding: 10px 20px;
+    border-radius: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .ctrl-btn {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .ctrl-btn:hover { background: rgba(255,255,255,0.2); }
+  .ctrl-btn.play { background: var(--primary); width: 44px; height: 44px; font-size: 16px; }
+  .ctrl-btn.play:hover { background: var(--primary-dark); }
+  .ctrl-progress {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 200px;
+  }
+  .ctrl-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), #5fb3a8);
+    width: 0%;
+    transition: width 0.2s linear;
+  }
+  .ctrl-time {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    font-variant-numeric: tabular-nums;
+    min-width: 60px;
+    text-align: center;
+  }
+  .ctrl-speed {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* ===== Help text ===== */
+  .help-bottom {
+    margin-top: 12px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+  }
+  kbd {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+  @media (max-width: 480px) {
+    .phone-frame { width: 300px; height: 600px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-page">
+
+  <header class="page-header">
+    <span style="font-size: 26px;">📅</span>
+    <div>
+      <div class="header-title">ShiftMaker — 使い方デモ</div>
+      <div class="header-sub">実際の操作を動画形式でご覧ください（自動再生・約60秒）</div>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- ====== Sidebar ====== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-title">チャプター</div>
+      <!-- Filled by JS -->
+    </aside>
+
+    <!-- ====== Main stage ====== -->
+    <main class="stage">
+
+      <div class="phone-area">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="status-bar">
+              <span id="status-time">9:41</span>
+              <span class="status-icons">📶 🔋</span>
+            </div>
+
+            <!-- Cursor -->
+            <div class="cursor" id="cursor"></div>
+
+            <!-- ================== Scenes ================== -->
+
+            <!-- Scene 1: Loading -->
+            <section class="scene" data-scene="1">
+              <div class="loading-scene">
+                <div class="big-spinner"></div>
+                <div class="loading-text">読み込み中...</div>
+              </div>
+            </section>
+
+            <!-- Scene 2: Workspace Gate -->
+            <section class="scene" data-scene="2">
+              <div class="gate-bg">
+                <div class="gate-card">
+                  <div class="gate-title">ShiftMaker</div>
+                  <div class="gate-sub">ワークスペースを選択してください</div>
+                  <div class="gate-field" id="gate-name">
+                    <span class="placeholder" id="gate-name-content">名前（例: 内科病棟）</span>
+                  </div>
+                  <div class="gate-field" id="gate-pin">
+                    <span class="placeholder" id="gate-pin-content">PINコード（任意）</span>
+                  </div>
+                  <div class="gate-btn" id="gate-submit">作成して開く</div>
+                  <div style="text-align: center; margin-top: 14px; font-size: 10px; color: var(--text-muted);">
+                    データはこの端末にのみ保存されます
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Scene 3: Onboarding -->
+            <section class="scene" data-scene="3">
+              <div class="app-header">
+                <div class="app-logo">ShiftMaker</div>
+                <div class="ws-chip">👤 内科病棟</div>
+                <div style="flex: 1;"></div>
+                <div class="help-btn-m">？</div>
+                <div class="month-sel-m">5月</div>
+                <div class="gen-btn-m">生成</div>
+                <div class="more-btn-m">⋯</div>
+              </div>
+              <div class="app-body" style="background: #f7f9fc;">
+                <div class="onboarding-overlay">
+                  <div class="onboarding-card">
+                    <div class="onboarding-icon">👋</div>
+                    <div class="onboarding-title">ShiftMakerへようこそ</div>
+                    <div class="onboarding-lead">はじめての方は、まずは下のステップで進めてみてください。</div>
+                    <div class="onboarding-steps">
+                      <strong>①スタッフ管理</strong> で登録<br>
+                      <strong>②希望入力</strong> で希望休<br>
+                      右上の <strong>「生成」</strong>ボタンを押す
+                    </div>
+                    <div class="onboarding-buttons">
+                      <div class="ob-btn secondary">使い方を見る</div>
+                      <div class="ob-btn primary" id="ob-start">始める</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="bottom-nav">
+                <div class="nav-tab active"><span class="step">1</span><br>スタッフ</div>
+                <div class="nav-tab"><span class="step">2</span><br>希望</div>
+                <div class="nav-tab"><span class="step">3</span><br>イベント</div>
+                <div class="nav-tab"><span class="step">4</span><br>条件</div>
+                <div class="nav-tab"><span class="step">5</span><br>シフト</div>
+                <div class="nav-tab"><span class="step">6</span><br>集計</div>
+              </div>
+            </section>
+
+            <!-- Scene 4: Staff Manager - Bulk Add -->
+            <section class="scene" data-scene="4">
+              <div class="app-header">
+                <div class="app-logo">ShiftMaker</div>
+                <div class="ws-chip">👤 内科病棟</div>
+                <div style="flex: 1;"></div>
+                <div class="help-btn-m">？</div>
+                <div class="month-sel-m">5月</div>
+                <div class="gen-btn-m">生成</div>
+              </div>
+              <div class="app-body">
+                <div class="form-tabs">
+                  <div class="form-tab">1名ずつ</div>
+                  <div class="form-tab active" id="bulk-tab">⚡ まとめて追加</div>
+                </div>
+                <div class="bulk-hint">役職名 + 人数で <strong>「看護師1, 看護師2 ...」</strong>と一括登録</div>
+                <div class="form-row">
+                  <div class="form-field">
+                    <div class="form-label">役職名</div>
+                    <div class="form-input" id="role-input">
+                      <span class="placeholder" id="role-content">例: 看護師</span>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 8px;">
+                    <div class="form-field" style="flex: 1;">
+                      <div class="form-label">人数</div>
+                      <div class="form-input" id="count-input">
+                        <span class="placeholder" id="count-content">5</span>
+                      </div>
+                    </div>
+                    <div class="form-field" style="flex: 1;">
+                      <div class="form-label">夜勤上限</div>
+                      <div class="form-input"><span>8</span></div>
+                    </div>
+                  </div>
+                  <div class="bulk-btn" id="bulk-submit">10名 一括追加</div>
+                </div>
+                <div class="staff-counter">登録済み: <span class="num" id="staff-count">0</span>名</div>
+                <div class="staff-list-m" id="staff-list">
+                  <!-- Staff cards generated by JS -->
+                </div>
+              </div>
+              <div class="bottom-nav">
+                <div class="nav-tab active"><span class="step">1</span><br>スタッフ</div>
+                <div class="nav-tab"><span class="step">2</span><br>希望</div>
+                <div class="nav-tab"><span class="step">3</span><br>イベント</div>
+                <div class="nav-tab"><span class="step">4</span><br>条件</div>
+                <div class="nav-tab"><span class="step">5</span><br>シフト</div>
+                <div class="nav-tab"><span class="step">6</span><br>集計</div>
+              </div>
+            </section>
+
+            <!-- Scene 5: Wish Input -->
+            <section class="scene" data-scene="5">
+              <div class="app-header">
+                <div class="app-logo">ShiftMaker</div>
+                <div class="ws-chip">👤 内科病棟</div>
+                <div style="flex: 1;"></div>
+                <div class="month-sel-m">5月</div>
+                <div class="gen-btn-m">生成</div>
+              </div>
+              <div class="app-body">
+                <div class="staff-pills">
+                  <div class="staff-pill active">看護師1</div>
+                  <div class="staff-pill">看護師2</div>
+                  <div class="staff-pill">看護師3</div>
+                  <div class="staff-pill">看護師4</div>
+                </div>
+                <div class="wish-mode-buttons">
+                  <div class="wish-mode active off" id="wish-mode-off">● 希望休</div>
+                  <div class="wish-mode">○ 有給</div>
+                </div>
+                <div class="cal-grid" id="cal-grid">
+                  <div class="cal-head">日</div><div class="cal-head">月</div><div class="cal-head">火</div><div class="cal-head">水</div><div class="cal-head">木</div><div class="cal-head">金</div><div class="cal-head">土</div>
+                  <!-- previous month -->
+                  <div class="cal-cell"><div class="num">26</div></div>
+                  <div class="cal-cell"><div class="num">27</div></div>
+                  <div class="cal-cell"><div class="num">28</div></div>
+                  <div class="cal-cell"><div class="num">29</div></div>
+                  <div class="cal-cell"><div class="num">30</div></div>
+                  <!-- May -->
+                  <div class="cal-cell thismonth"><div class="num">1</div></div>
+                  <div class="cal-cell thismonth"><div class="num">2</div></div>
+                  <div class="cal-cell thismonth" data-day="3"><div class="num">3</div></div>
+                  <div class="cal-cell thismonth" data-day="4"><div class="num">4</div></div>
+                  <div class="cal-cell thismonth" data-day="5"><div class="num">5</div></div>
+                  <div class="cal-cell thismonth"><div class="num">6</div></div>
+                  <div class="cal-cell thismonth"><div class="num">7</div></div>
+                  <div class="cal-cell thismonth"><div class="num">8</div></div>
+                  <div class="cal-cell thismonth"><div class="num">9</div></div>
+                  <div class="cal-cell thismonth"><div class="num">10</div></div>
+                  <div class="cal-cell thismonth"><div class="num">11</div></div>
+                  <div class="cal-cell thismonth" data-day="12"><div class="num">12</div></div>
+                  <div class="cal-cell thismonth"><div class="num">13</div></div>
+                  <div class="cal-cell thismonth"><div class="num">14</div></div>
+                </div>
+              </div>
+              <div class="bottom-nav">
+                <div class="nav-tab"><span class="step">1</span><br>スタッフ</div>
+                <div class="nav-tab active"><span class="step">2</span><br>希望</div>
+                <div class="nav-tab"><span class="step">3</span><br>イベント</div>
+                <div class="nav-tab"><span class="step">4</span><br>条件</div>
+                <div class="nav-tab"><span class="step">5</span><br>シフト</div>
+                <div class="nav-tab"><span class="step">6</span><br>集計</div>
+              </div>
+            </section>
+
+            <!-- Scene 6: Generation -->
+            <section class="scene" data-scene="6">
+              <div class="app-header">
+                <div class="app-logo">ShiftMaker</div>
+                <div class="ws-chip">👤 内科病棟</div>
+                <div style="flex: 1;"></div>
+                <div class="month-sel-m">5月</div>
+                <div class="gen-btn-m" id="gen-button" style="background: #f0f0f0; color: #999;">⏳ 生成中</div>
+              </div>
+              <div class="app-body">
+                <div class="gen-loading">
+                  <div class="timer" id="gen-timer">00:00</div>
+                  <div class="gen-label">最適なシフトを計算中...</div>
+                  <div class="gen-progress">
+                    <div class="gen-progress-bar" id="gen-progress-bar"></div>
+                  </div>
+                  <div class="gen-detail">
+                    10名 × 31日 = 310セル<br>
+                    夜勤連鎖・希望・上限を同時最適化
+                  </div>
+                </div>
+              </div>
+              <div class="bottom-nav">
+                <div class="nav-tab"><span class="step">1</span><br>スタッフ</div>
+                <div class="nav-tab"><span class="step">2</span><br>希望</div>
+                <div class="nav-tab"><span class="step">3</span><br>イベント</div>
+                <div class="nav-tab"><span class="step">4</span><br>条件</div>
+                <div class="nav-tab"><span class="step">5</span><br>シフト</div>
+                <div class="nav-tab"><span class="step">6</span><br>集計</div>
+              </div>
+            </section>
+
+            <!-- Scene 7: Shift table -->
+            <section class="scene" data-scene="7">
+              <div class="app-header">
+                <div class="app-logo">ShiftMaker</div>
+                <div class="ws-chip">👤 内科病棟</div>
+                <div style="flex: 1;"></div>
+                <div class="month-sel-m">5月</div>
+                <div class="gen-btn-m">生成</div>
+              </div>
+              <div class="app-body" style="padding: 8px;">
+                <div class="shift-table-m" id="shift-table">
+                  <div class="shift-row head">
+                    <div>名前</div><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div>
+                  </div>
+                </div>
+                <div class="legend">
+                  <span class="legend-item" style="background: var(--d-shift);">D 日勤</span>
+                  <span class="legend-item" style="background: var(--n-shift);">N 夜勤</span>
+                  <span class="legend-item" style="background: var(--a-shift);">A 明け</span>
+                  <span class="legend-item" style="background: var(--o-shift);">O 休</span>
+                  <span class="legend-item" style="background: var(--y-shift);">Y 有給</span>
+                </div>
+              </div>
+              <div class="bottom-nav">
+                <div class="nav-tab"><span class="step">1</span><br>スタッフ</div>
+                <div class="nav-tab"><span class="step">2</span><br>希望</div>
+                <div class="nav-tab"><span class="step">3</span><br>イベント</div>
+                <div class="nav-tab"><span class="step">4</span><br>条件</div>
+                <div class="nav-tab active"><span class="step">5</span><br>シフト</div>
+                <div class="nav-tab"><span class="step">6</span><br>集計</div>
+              </div>
+            </section>
+
+            <!-- Scene 8: Summary -->
+            <section class="scene" data-scene="8">
+              <div class="app-header">
+                <div class="app-logo">ShiftMaker</div>
+                <div class="ws-chip">👤 内科病棟</div>
+                <div style="flex: 1;"></div>
+                <div class="month-sel-m">5月</div>
+                <div class="gen-btn-m">生成</div>
+              </div>
+              <div class="app-body">
+                <div class="summary-list" id="summary-list">
+                  <!-- Filled by JS -->
+                </div>
+              </div>
+              <div class="bottom-nav">
+                <div class="nav-tab"><span class="step">1</span><br>スタッフ</div>
+                <div class="nav-tab"><span class="step">2</span><br>希望</div>
+                <div class="nav-tab"><span class="step">3</span><br>イベント</div>
+                <div class="nav-tab"><span class="step">4</span><br>条件</div>
+                <div class="nav-tab"><span class="step">5</span><br>シフト</div>
+                <div class="nav-tab active"><span class="step">6</span><br>集計</div>
+              </div>
+            </section>
+
+            <!-- Scene 9: Done -->
+            <section class="scene" data-scene="9">
+              <div class="done-scene">
+                <div class="confetti" style="left: 20%; top: 10%; font-size: 24px; animation-delay: 0s;">🎉</div>
+                <div class="confetti" style="left: 60%; top: 10%; font-size: 24px; animation-delay: 0.5s;">✨</div>
+                <div class="confetti" style="left: 35%; top: 10%; font-size: 24px; animation-delay: 1s;">🎊</div>
+                <div class="confetti" style="left: 75%; top: 10%; font-size: 24px; animation-delay: 1.5s;">⭐</div>
+                <div class="done-icon">✅</div>
+                <div class="done-title">完成！</div>
+                <div class="done-sub">1ヶ月分のシフトが完成しました</div>
+                <div class="done-stat">
+                  <div class="val">3 分</div>
+                  <div class="lbl">所要時間</div>
+                </div>
+                <div class="done-stat" style="background: rgba(76,175,80,0.3); border-color: rgba(76,175,80,0.5);">
+                  <div class="val">¥0</div>
+                  <div class="lbl">コスト</div>
+                </div>
+              </div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Caption -->
+      <div class="caption-box">
+        <div class="caption-eyebrow" id="caption-eyebrow">CHAPTER 1</div>
+        <div class="caption-text" id="caption-text">読み込み中...</div>
+        <div class="caption-detail" id="caption-detail"></div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <button class="ctrl-btn" id="btn-restart" title="最初から (Home)">⏮</button>
+        <button class="ctrl-btn" id="btn-prev" title="前のチャプター (←)">⏪</button>
+        <button class="ctrl-btn play" id="btn-play" title="再生/一時停止 (Space)">⏸</button>
+        <button class="ctrl-btn" id="btn-next" title="次のチャプター (→)">⏩</button>
+        <div class="ctrl-progress">
+          <div class="ctrl-progress-bar" id="ctrl-progress-bar"></div>
+        </div>
+        <div class="ctrl-time" id="ctrl-time">0:00 / 1:00</div>
+        <select class="ctrl-speed" id="ctrl-speed">
+          <option value="0.5">0.5x</option>
+          <option value="1" selected>1x</option>
+          <option value="1.5">1.5x</option>
+          <option value="2">2x</option>
+        </select>
+      </div>
+
+      <div class="help-bottom">
+        <kbd>Space</kbd> 再生/停止 / <kbd>←</kbd><kbd>→</kbd> チャプター移動 / <kbd>Home</kbd> 最初から
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+// ============== Chapter data ==============
+const chapters = [
+  {
+    id: 1,
+    title: '起動',
+    desc: 'URLを開く',
+    duration: 4000,
+    eyebrow: 'CHAPTER 1 / 9',
+    setup: () => {},
+    timeline: [
+      { at: 0, text: 'スマホでアプリのURLを開きます', detail: 'インストール不要。ブラウザを開くだけ' },
+      { at: 2500, text: '読み込み中...', detail: 'Render無料プランは初回30〜60秒スリープ起動の場合あり' },
+    ]
+  },
+  {
+    id: 2,
+    title: 'ワークスペース作成',
+    desc: '名前を入力して開始',
+    duration: 8000,
+    eyebrow: 'CHAPTER 2 / 9',
+    setup: () => {
+      resetGate();
+      hideCursor();
+    },
+    timeline: [
+      { at: 0, text: 'ワークスペース作成画面が表示されます', detail: 'アカウント登録は不要' },
+      { at: 800, action: () => moveCursor(160, 240) },
+      { at: 1600, action: () => tapAt(160, 240) },
+      { at: 1700, action: () => focusGateField('gate-name'), text: '名前欄をタップしてフォーカス' },
+      { at: 2200, action: () => typeText('gate-name-content', '内科病棟', 600), text: '名前を入力（例: 内科病棟）', detail: '病棟名や自分の名前など分かりやすいものを' },
+      { at: 3200, action: () => moveCursor(160, 320) },
+      { at: 4000, action: () => tapAt(160, 320), text: 'PINコード（任意）を入力' },
+      { at: 4100, action: () => focusGateField('gate-pin') },
+      { at: 4400, action: () => typeText('gate-pin-content', '••••', 400), detail: 'PINを設定すると、端末紛失時も中身は見られない' },
+      { at: 5500, action: () => moveCursor(160, 420) },
+      { at: 6500, action: () => tapAt(160, 420), text: '「作成して開く」をタップ', detail: 'これでワークスペースが作成されます' },
+      { at: 7200, action: () => hideCursor() },
+    ]
+  },
+  {
+    id: 3,
+    title: '初回ガイド',
+    desc: 'オンボーディング表示',
+    duration: 5000,
+    eyebrow: 'CHAPTER 3 / 9',
+    setup: () => { hideCursor(); },
+    timeline: [
+      { at: 0, text: 'ようこそ！ 初回はガイドが表示されます', detail: 'スタッフ登録から始めましょう' },
+      { at: 2500, action: () => moveCursor(220, 480) },
+      { at: 3300, action: () => tapAt(220, 480), text: '「始める」をタップ' },
+      { at: 4000, action: () => hideCursor() },
+    ]
+  },
+  {
+    id: 4,
+    title: 'スタッフ登録',
+    desc: '⚡ まとめて10名',
+    duration: 11000,
+    eyebrow: 'CHAPTER 4 / 9',
+    setup: () => {
+      resetStaff();
+      hideCursor();
+    },
+    timeline: [
+      { at: 0, text: 'スタッフ管理を開きます', detail: '初期画面のタブ' },
+      { at: 800, text: '「⚡ まとめて追加」が選択されています', detail: '役職と人数で一気に登録できる新機能' },
+      { at: 2200, action: () => moveCursor(160, 200) },
+      { at: 3000, action: () => tapAt(160, 200) },
+      { at: 3100, action: () => focusInput('role-input'), text: '役職名を入力' },
+      { at: 3500, action: () => typeText('role-content', '看護師', 500) },
+      { at: 4800, action: () => moveCursor(80, 290) },
+      { at: 5500, action: () => tapAt(80, 290) },
+      { at: 5600, action: () => focusInput('count-input'), text: '人数を入力' },
+      { at: 6000, action: () => typeText('count-content', '10', 300), detail: '10名分のスタッフを一気に登録します' },
+      { at: 7300, action: () => moveCursor(160, 400) },
+      { at: 8100, action: () => tapAt(160, 400), text: '「10名 一括追加」をタップ', detail: '看護師1, 看護師2, ..., 看護師10 が登録されます' },
+      { at: 8400, action: () => appendStaffCards(10, 220) },
+      { at: 10500, action: () => hideCursor() },
+    ]
+  },
+  {
+    id: 5,
+    title: '希望休入力',
+    desc: 'カレンダーをタップ',
+    duration: 9000,
+    eyebrow: 'CHAPTER 5 / 9',
+    setup: () => {
+      resetWish();
+      hideCursor();
+    },
+    timeline: [
+      { at: 0, text: '希望入力タブに切り替えました', detail: 'スタッフが選択されています' },
+      { at: 1200, text: '「希望休」モードが選択中', detail: '休みたい日をタップで指定' },
+      { at: 2500, action: () => moveCursor(120, 290) },
+      { at: 3200, action: () => tapAt(120, 290) },
+      { at: 3300, action: () => markDayOff(3), text: '5月3日をタップ → 希望休に' },
+      { at: 4000, action: () => moveCursor(170, 290) },
+      { at: 4700, action: () => tapAt(170, 290) },
+      { at: 4800, action: () => markDayOff(4) },
+      { at: 5400, action: () => moveCursor(220, 290) },
+      { at: 6100, action: () => tapAt(220, 290) },
+      { at: 6200, action: () => markDayOff(5), text: 'カレンダーで連休希望を指定', detail: 'もう一度タップで取り消し可能' },
+      { at: 7000, action: () => moveCursor(135, 380) },
+      { at: 7800, action: () => tapAt(135, 380) },
+      { at: 7900, action: () => markDayOff(12), text: '希望休が完了しました', detail: 'これで全員分が同様にできます' },
+      { at: 8600, action: () => hideCursor() },
+    ]
+  },
+  {
+    id: 6,
+    title: 'シフト生成',
+    desc: 'AIが最適化',
+    duration: 7000,
+    eyebrow: 'CHAPTER 6 / 9',
+    setup: () => {
+      resetGen();
+      hideCursor();
+    },
+    timeline: [
+      { at: 0, text: '右上の「シフト生成」ボタンをタップ', detail: 'これだけで自動最適化が始まります' },
+      { at: 1500, action: () => startGenTimer() },
+      { at: 1500, text: 'AI が最適化計算を実行中...', detail: '夜勤連鎖・上限・希望・必要人数を同時に解く' },
+      { at: 3500, text: 'Google OR-Tools (CP-SAT solver)', detail: '組み合わせ最適化の世界標準アルゴリズム' },
+      { at: 5500, text: '計算完了！', detail: '通常5〜55秒で1ヶ月分が完成' },
+    ]
+  },
+  {
+    id: 7,
+    title: 'シフト表完成',
+    desc: '色分けで一目瞭然',
+    duration: 8000,
+    eyebrow: 'CHAPTER 7 / 9',
+    setup: () => {
+      buildShiftTable();
+      hideCursor();
+    },
+    timeline: [
+      { at: 0, text: 'シフト表タブに自動遷移', detail: '生成された結果が表示されます' },
+      { at: 500, action: () => animateShiftCells() },
+      { at: 2000, text: '1ヶ月分のシフトが完成', detail: 'D 日勤 / N 夜勤 / A 明け / O 休 / Y 有給' },
+      { at: 4500, text: 'N→A の連鎖が自動で守られている', detail: '夜勤(N)の翌日は必ず明け(A)' },
+      { at: 6500, text: 'セルをタップで手動編集も可能', detail: '気になる箇所はその場で修正できる' },
+    ]
+  },
+  {
+    id: 8,
+    title: '集計でチェック',
+    desc: '公平性を数値で',
+    duration: 6000,
+    eyebrow: 'CHAPTER 8 / 9',
+    setup: () => {
+      resetSummary();
+      hideCursor();
+    },
+    timeline: [
+      { at: 0, text: '集計タブで偏りをチェック', detail: '各スタッフの夜勤・休日回数を確認' },
+      { at: 500, action: () => animateSummaryCards() },
+      { at: 2500, text: '夜勤回数がほぼ均等', detail: '「あの人ばかり夜勤」というクレーム解消' },
+      { at: 4500, text: '完成データはこの端末にのみ保存', detail: 'サーバには送信・保存されません' },
+    ]
+  },
+  {
+    id: 9,
+    title: '完了',
+    desc: '3分で月間シフト',
+    duration: 5000,
+    eyebrow: 'COMPLETE',
+    setup: () => { hideCursor(); },
+    timeline: [
+      { at: 0, text: '🎉 1ヶ月分のシフトが完成しました', detail: '所要時間は約3分' },
+      { at: 2000, text: '次月もこの繰り返し', detail: 'スタッフ情報は保存済み。希望入力と生成だけ' },
+      { at: 4000, text: '今すぐ試してみてください', detail: 'https://shiftmaker-s6fs.onrender.com' },
+    ]
+  },
+];
+
+// ============== Player state ==============
+let currentChapter = 0;
+let chapterStartTime = 0;
+let elapsedInChapter = 0;
+let isPlaying = true;
+let speed = 1;
+let rafId = null;
+let chapterTimers = [];
+
+const totalDuration = chapters.reduce((s, c) => s + c.duration, 0);
+
+// ============== Element refs ==============
+const captionText = document.getElementById('caption-text');
+const captionDetail = document.getElementById('caption-detail');
+const captionEyebrow = document.getElementById('caption-eyebrow');
+const ctrlProgressBar = document.getElementById('ctrl-progress-bar');
+const ctrlTime = document.getElementById('ctrl-time');
+const cursor = document.getElementById('cursor');
+
+// ============== Helpers ==============
+function formatTime(ms) {
+  const sec = Math.floor(ms / 1000);
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function showScene(idx) {
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  const scene = document.querySelector(`[data-scene="${idx + 1}"]`);
+  if (scene) scene.classList.add('active');
+}
+
+function moveCursor(x, y) {
+  cursor.classList.add('visible');
+  cursor.style.left = (x - 14) + 'px';
+  cursor.style.top = (y - 14) + 'px';
+}
+
+function tapAt(x, y) {
+  cursor.classList.add('visible', 'tap');
+  cursor.style.left = (x - 14) + 'px';
+  cursor.style.top = (y - 14) + 'px';
+  setTimeout(() => cursor.classList.remove('tap'), 500);
+}
+
+function hideCursor() {
+  cursor.classList.remove('visible');
+}
+
+function focusGateField(id) {
+  document.querySelectorAll('.gate-field').forEach(el => el.classList.remove('focused'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('focused');
+}
+
+function focusInput(id) {
+  document.querySelectorAll('.form-input').forEach(el => el.classList.remove('focused'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('focused');
+}
+
+function typeText(targetId, text, durationMs) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  target.classList.remove('placeholder');
+  target.classList.add('typed');
+  target.innerHTML = '<span class="cursor-blink"></span>';
+  const chars = [...text];
+  const step = durationMs / chars.length / speed;
+  let i = 0;
+  const timer = setInterval(() => {
+    if (i >= chars.length) {
+      clearInterval(timer);
+      return;
+    }
+    const cur = chars.slice(0, i + 1).join('');
+    target.innerHTML = cur + '<span class="cursor-blink"></span>';
+    i++;
+  }, step);
+  chapterTimers.push(timer);
+}
+
+function resetGate() {
+  document.getElementById('gate-name-content').className = 'placeholder';
+  document.getElementById('gate-name-content').textContent = '名前（例: 内科病棟）';
+  document.getElementById('gate-pin-content').className = 'placeholder';
+  document.getElementById('gate-pin-content').textContent = 'PINコード（任意）';
+  document.querySelectorAll('.gate-field').forEach(el => el.classList.remove('focused'));
+}
+
+function resetStaff() {
+  document.getElementById('role-content').className = 'placeholder';
+  document.getElementById('role-content').textContent = '例: 看護師';
+  document.getElementById('count-content').className = 'placeholder';
+  document.getElementById('count-content').textContent = '5';
+  document.getElementById('staff-list').innerHTML = '';
+  document.getElementById('staff-count').textContent = '0';
+  document.querySelectorAll('.form-input').forEach(el => el.classList.remove('focused'));
+}
+
+function appendStaffCards(count, durationMs) {
+  const list = document.getElementById('staff-list');
+  const counter = document.getElementById('staff-count');
+  list.innerHTML = '';
+  const interval = durationMs / count / speed;
+  for (let i = 0; i < count; i++) {
+    const t = setTimeout(() => {
+      const card = document.createElement('div');
+      card.className = 'staff-card-m visible';
+      card.innerHTML = `
+        <div class="staff-name-m">看護師${i + 1}</div>
+        <div class="staff-role-m">看護師</div>
+        <span class="badge-mini">夜勤可</span>
+      `;
+      list.appendChild(card);
+      counter.textContent = i + 1;
+    }, interval * i);
+    chapterTimers.push(t);
+  }
+}
+
+function resetWish() {
+  document.querySelectorAll('#cal-grid .cal-cell').forEach(c => c.classList.remove('wish-off', 'paid'));
+}
+
+function markDayOff(day) {
+  const cell = document.querySelector(`#cal-grid [data-day="${day}"]`);
+  if (cell) cell.classList.add('wish-off');
+}
+
+function resetGen() {
+  document.getElementById('gen-timer').textContent = '00:00';
+  const bar = document.getElementById('gen-progress-bar');
+  bar.classList.remove('animating');
+  bar.style.width = '0%';
+  bar.offsetHeight;
+}
+
+function startGenTimer() {
+  const bar = document.getElementById('gen-progress-bar');
+  bar.style.animationDuration = (5.5 / speed) + 's';
+  bar.classList.add('animating');
+  let elapsed = 0;
+  const timer = setInterval(() => {
+    elapsed += 50 * speed;
+    if (elapsed > 5500) {
+      clearInterval(timer);
+      return;
+    }
+    const ts = Math.floor(elapsed / 1000);
+    const tms = Math.floor((elapsed % 1000) / 10);
+    document.getElementById('gen-timer').textContent =
+      `00:${String(ts).padStart(2, '0')}.${String(tms).padStart(2, '0')}`;
+  }, 50);
+  chapterTimers.push(timer);
+}
+
+const SHIFT_DATA = [
+  { name: '看護師1', shifts: ['d','n','a','o','o','d','d','y','o','d'] },
+  { name: '看護師2', shifts: ['n','a','o','d','d','o','d','d','n','a'] },
+  { name: '看護師3', shifts: ['d','d','n','a','o','d','o','d','d','o'] },
+  { name: '看護師4', shifts: ['o','d','d','n','a','o','d','d','o','d'] },
+  { name: '看護師5', shifts: ['d','o','d','d','n','a','o','n','a','o'] },
+  { name: '主任1', shifts: ['d','d','d','d','d','o','o','d','d','d'] },
+];
+
+function buildShiftTable() {
+  const tbl = document.getElementById('shift-table');
+  tbl.innerHTML = `
+    <div class="shift-row head">
+      <div>名前</div><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div>
+    </div>
+  `;
+  SHIFT_DATA.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'shift-row';
+    row.innerHTML = `<div class="shift-name">${s.name}</div>` +
+      s.shifts.map(sh => `<div class="shift-cell-m ${sh}">${sh.toUpperCase()}</div>`).join('');
+    tbl.appendChild(row);
+  });
+}
+
+function animateShiftCells() {
+  const cells = document.querySelectorAll('#shift-table .shift-cell-m');
+  const baseDelay = 35 / speed;
+  cells.forEach((c, i) => {
+    const t = setTimeout(() => c.classList.add('visible'), i * baseDelay);
+    chapterTimers.push(t);
+  });
+}
+
+const SUMMARY_DATA = [
+  { name: '看護師1', d: 14, n: 7, a: 7, o: 2, y: 1 },
+  { name: '看護師2', d: 13, n: 8, a: 8, o: 2, y: 0 },
+  { name: '看護師3', d: 14, n: 7, a: 7, o: 3, y: 0 },
+  { name: '看護師4', d: 15, n: 7, a: 7, o: 2, y: 0 },
+  { name: '主任1', d: 22, n: 0, a: 0, o: 8, y: 1 },
+];
+
+function resetSummary() {
+  document.getElementById('summary-list').innerHTML = '';
+}
+
+function animateSummaryCards() {
+  const list = document.getElementById('summary-list');
+  list.innerHTML = '';
+  SUMMARY_DATA.forEach((s, i) => {
+    const t = setTimeout(() => {
+      const card = document.createElement('div');
+      card.className = 'summary-card-m visible';
+      card.innerHTML = `
+        <div class="summary-name">${s.name}</div>
+        <div class="summary-stats">
+          <div class="summary-stat d"><span class="val">${s.d}</span><span class="lbl">D</span></div>
+          <div class="summary-stat n"><span class="val">${s.n}</span><span class="lbl">N</span></div>
+          <div class="summary-stat a"><span class="val">${s.a}</span><span class="lbl">A</span></div>
+          <div class="summary-stat o"><span class="val">${s.o}</span><span class="lbl">O</span></div>
+          <div class="summary-stat y"><span class="val">${s.y}</span><span class="lbl">Y</span></div>
+        </div>
+      `;
+      list.appendChild(card);
+    }, i * (350 / speed));
+    chapterTimers.push(t);
+  });
+}
+
+function clearTimers() {
+  chapterTimers.forEach(t => { clearTimeout(t); clearInterval(t); });
+  chapterTimers = [];
+}
+
+// ============== Chapter switching ==============
+function startChapter(idx) {
+  clearTimers();
+  currentChapter = idx;
+  chapterStartTime = performance.now();
+  elapsedInChapter = 0;
+  const chapter = chapters[idx];
+  showScene(idx);
+  if (chapter.setup) chapter.setup();
+  captionEyebrow.textContent = chapter.eyebrow;
+  captionText.textContent = '';
+  captionDetail.textContent = '';
+  // Schedule timeline events
+  chapter.timeline.forEach(ev => {
+    const t = setTimeout(() => {
+      if (ev.text !== undefined) captionText.textContent = ev.text;
+      if (ev.detail !== undefined) captionDetail.textContent = ev.detail;
+      if (ev.action) ev.action();
+    }, ev.at / speed);
+    chapterTimers.push(t);
+  });
+  // Schedule chapter end
+  const endTimer = setTimeout(() => {
+    if (currentChapter < chapters.length - 1) {
+      startChapter(currentChapter + 1);
+    } else {
+      // End of demo — loop back
+      setTimeout(() => startChapter(0), 2000 / speed);
+    }
+  }, chapter.duration / speed);
+  chapterTimers.push(endTimer);
+  updateSidebar();
+  updateTimeDisplay();
+}
+
+function pause() {
+  isPlaying = false;
+  clearTimers();
+  document.getElementById('btn-play').textContent = '▶';
+}
+
+function play() {
+  isPlaying = true;
+  startChapter(currentChapter);
+  document.getElementById('btn-play').textContent = '⏸';
+}
+
+function togglePlay() {
+  if (isPlaying) pause();
+  else play();
+}
+
+function nextChapter() {
+  if (currentChapter < chapters.length - 1) {
+    startChapter(currentChapter + 1);
+  } else {
+    startChapter(0);
+  }
+}
+
+function prevChapter() {
+  if (currentChapter > 0) startChapter(currentChapter - 1);
+  else startChapter(0);
+}
+
+function updateSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = '<div class="sidebar-title">チャプター</div>';
+  chapters.forEach((c, i) => {
+    const item = document.createElement('div');
+    item.className = 'chapter-item' + (i === currentChapter ? ' active' : (i < currentChapter ? ' done' : ''));
+    item.innerHTML = `
+      <div class="chapter-num">${i + 1}</div>
+      <div class="chapter-info">
+        <div class="chapter-name">${c.title}</div>
+        <div class="chapter-desc">${c.desc}</div>
+      </div>
+    `;
+    item.onclick = () => startChapter(i);
+    sidebar.appendChild(item);
+  });
+}
+
+function updateTimeDisplay() {
+  let elapsedTotal = 0;
+  for (let i = 0; i < currentChapter; i++) elapsedTotal += chapters[i].duration;
+  ctrlTime.textContent = `${formatTime(elapsedTotal)} / ${formatTime(totalDuration)}`;
+  const pct = (elapsedTotal / totalDuration) * 100;
+  ctrlProgressBar.style.width = pct + '%';
+}
+
+// Smooth progress bar update
+function rafLoop() {
+  if (isPlaying) {
+    const now = performance.now();
+    elapsedInChapter = (now - chapterStartTime) * speed;
+    let elapsedTotal = elapsedInChapter;
+    for (let i = 0; i < currentChapter; i++) elapsedTotal += chapters[i].duration;
+    const pct = Math.min((elapsedTotal / totalDuration) * 100, 100);
+    ctrlProgressBar.style.width = pct + '%';
+    ctrlTime.textContent = `${formatTime(elapsedTotal)} / ${formatTime(totalDuration)}`;
+  }
+  rafId = requestAnimationFrame(rafLoop);
+}
+
+// ============== Event listeners ==============
+document.getElementById('btn-play').addEventListener('click', togglePlay);
+document.getElementById('btn-restart').addEventListener('click', () => startChapter(0));
+document.getElementById('btn-next').addEventListener('click', nextChapter);
+document.getElementById('btn-prev').addEventListener('click', prevChapter);
+document.getElementById('ctrl-speed').addEventListener('change', (e) => {
+  speed = parseFloat(e.target.value);
+  if (isPlaying) startChapter(currentChapter);
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+  if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); nextChapter(); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); prevChapter(); }
+  else if (e.key === 'Home') { e.preventDefault(); startChapter(0); }
+});
+
+// ============== Boot ==============
+rafLoop();
+startChapter(0);
+
+// Live clock in status bar
+function updateStatusClock() {
+  const d = new Date();
+  document.getElementById('status-time').textContent =
+    `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+updateStatusClock();
+setInterval(updateStatusClock, 30000);
+</script>
+
+</body>
+</html>
