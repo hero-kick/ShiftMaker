@@ -4,6 +4,7 @@ import useStore from '../store/useStore'
 const WISH_TYPES = [
   { value: '希望休', label: '希望休', color: '#FF7043' },
   { value: '有給', label: '有給', color: '#2196F3' },
+  { value: '出勤', label: '出勤', color: '#22863a' },
 ]
 
 const DAY_NAMES = ['日', '月', '火', '水', '木', '金', '土']
@@ -118,6 +119,7 @@ export default function WishInput() {
   const staffWishes = wishes.filter((w) => w.staff_id === selectedStaffId)
   const kyukuCount = staffWishes.filter((w) => w.type === '希望休').length
   const yukuCount = staffWishes.filter((w) => w.type === '有給').length
+  const shukkinCount = staffWishes.filter((w) => w.type === '出勤').length
 
   return (
     <div className="wish-input">
@@ -169,6 +171,8 @@ export default function WishInput() {
                   <span style={{ color: '#FF7043' }}>{kyukuCount}</span>
                   <span className="wish-count-sep">/</span>
                   <span style={{ color: '#2196F3' }}>{yukuCount}</span>
+                  <span className="wish-count-sep">/</span>
+                  <span style={{ color: '#22863a' }}>{shukkinCount}</span>
                 </div>
               )}
             </div>
@@ -218,6 +222,7 @@ export default function WishInput() {
                 <strong>{selectedStaff.name}</strong> の希望:
                 <span style={{ color: '#FF7043', marginLeft: 8 }}>希望休 {kyukuCount}件</span>
                 <span style={{ color: '#2196F3', marginLeft: 8 }}>有給 {yukuCount}件</span>
+                <span style={{ color: '#22863a', marginLeft: 8 }}>出勤 {shukkinCount}件</span>
               </div>
             )}
           </div>

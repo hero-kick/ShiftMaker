@@ -29,7 +29,7 @@ class DayCondition(BaseModel):
 class Wish(BaseModel):
     staff_id: str
     date: str  # YYYY-MM-DD
-    type: str  # "希望休" or "有給"
+    type: str  # "希望休" (soft prefer O) / "有給" (hard Y) / "出勤" (hard not O/Y)
 
 
 class GenerateRequest(BaseModel):

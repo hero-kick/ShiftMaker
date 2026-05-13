@@ -203,6 +203,12 @@ def solve(request: GenerateRequest) -> dict:
                     model.add(x[sid][d][SHIFT_O] == 0)
                     model.add(x[sid][d][SHIFT_Y] == 0)
 
+    # Hard constraint 9b: per-staff "出勤" wish → must work (not O, not Y) on that day
+    for (sid, d), wtype in wish_map.items():
+        if wtype == "出勤" and sid in staff_ids:
+            model.add(x[sid][d][SHIFT_O] == 0)
+            model.add(x[sid][d][SHIFT_Y] == 0)
+
     # Hard constraint 10: forbidden_staff_ids must be O on that day
     for d in days:
         dc = day_conditions_map.get(d)
