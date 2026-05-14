@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import useStore from '../store/useStore'
+import useIsMobile from '../hooks/useIsMobile'
 
 const WISH_TYPES = [
   { value: '希望休', label: '希望休', color: '#FF7043' },
@@ -9,21 +10,9 @@ const WISH_TYPES = [
 
 const DAY_NAMES = ['日', '月', '火', '水', '木', '金', '土']
 
-function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' && window.innerWidth <= breakpoint
-  )
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`)
-    const handler = (e) => setIsMobile(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [breakpoint])
-  return isMobile
-}
-
 export default function WishInput() {
-  const { staff, wishes, addWish, removeWish, year, month } = useStore()
+  const { staff, wishes, addWish, removeWish, clearWishesForStaff, year, month } = useStore()
+  const monthPrefix = `${year}-${String(month).padStart(2, '0')}-`
   const [selectedStaffId, setSelectedStaffId] = useState('')
   const [selectedWishType, setSelectedWishType] = useState('希望休')
   const [noStaffWarning, setNoStaffWarning] = useState(false)
@@ -336,17 +325,30 @@ export default function WishInput() {
                     <span className="wish-group-name">{s.name}</span>
                     {s.role && <span className="wish-group-role">{s.role}</span>}
                     <span className="wish-group-count">{staffWishes.length}件</span>
+                    <button
+                      className="wish-group-clear"
+                      onClick={() => {
+                        if (window.confirm(`${s.name} さんの希望を全て削除しますか？`)) {
+                          clearWishesForStaff(s.id)
+                        }
+                      }}
+                      title={`${s.name} の希望を一括削除`}
+                    >
+                      全削除
+                    </button>
                   </div>
                   <div className="wish-group-items">
                     {staffWishes.map((w, i) => {
                       const wt = WISH_TYPES.find((t) => t.value === w.type)
-                      const d = new Date(w.date)
-                      const dayName = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()]
+                      // タイムゾーン非依存で曜日算出（new Date(str) は UTC 解釈でズレる）
+                      const [wy, wm, wd] = w.date.split('-').map(Number)
+                      const dow = new Date(wy, wm - 1, wd).getDay()
+                      const dayName = ['日', '月', '火', '水', '木', '金', '土'][dow]
                       return (
                         <div key={i} className="wish-group-item">
                           <span className="wish-item-date">
                             {w.date.slice(5).replace('-', '/')}
-                            <span className={`wish-item-day ${d.getDay() === 0 ? 'sunday' : d.getDay() === 6 ? 'saturday' : ''}`}>({dayName})</span>
+                            <span className={`wish-item-day ${dow === 0 ? 'sunday' : dow === 6 ? 'saturday' : ''}`}>({dayName})</span>
                           </span>
                           <span
                             className="badge"

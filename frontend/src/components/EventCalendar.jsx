@@ -1,34 +1,32 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import useStore from '../store/useStore'
+import useIsMobile from '../hooks/useIsMobile'
+import useModalA11y from '../hooks/useModalA11y'
 
 const DAY_NAMES = ['日', '月', '火', '水', '木', '金', '土']
 const EVENT_COLOR = '#E53935'
 const EVENT_LIGHT = '#FFEBEE'
 
-function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' && window.innerWidth <= breakpoint
-  )
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`)
-    const handler = (e) => setIsMobile(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [breakpoint])
-  return isMobile
-}
-
-function EventPanel({ year, month, selectedDay, staff, editName, setEditName, editStaffIds, toggleStaff, onSave, onDelete, onClose, canDelete }) {
+function EventPanel({
+  year, month, selectedDay, staff,
+  editName, setEditName,
+  editStaffIds, toggleStaff,
+  editForbiddenIds, toggleForbidden,
+  onSave, onDelete, onClose, canDelete,
+}) {
+  // 同じスタッフが必須出勤 と 絶対休み の両方に入らないようにする
+  const hasConflict = editStaffIds.some((id) => editForbiddenIds.includes(id))
+  const canSave = editName.trim() !== '' || editStaffIds.length > 0 || editForbiddenIds.length > 0
   return (
     <>
       <div className="side-panel-header">
         <h3>{month}月{selectedDay}日</h3>
-        <button className="close-btn" onClick={onClose}>✕</button>
+        <button className="close-btn" onClick={onClose} aria-label="閉じる">✕</button>
       </div>
       <div className="side-panel-body">
         <div className="form-group">
-          <label>イベント名</label>
+          <label>イベント名（任意）</label>
           <input
             type="text"
             value={editName}
@@ -39,8 +37,8 @@ function EventPanel({ year, month, selectedDay, staff, editName, setEditName, ed
           />
         </div>
         <div className="form-group">
-          <label>必須出席スタッフ</label>
-          <p className="hint-text-sm">チェックしたスタッフはこの日必ず出勤になります</p>
+          <label>この日 必ず出勤するスタッフ</label>
+          <p className="hint-text-sm">チェックしたスタッフはこの日 必ず出勤になります（休み・有給にならない）</p>
           {staff.length === 0 ? (
             <p className="empty-msg">スタッフが未登録です</p>
           ) : (
@@ -59,9 +57,35 @@ function EventPanel({ year, month, selectedDay, staff, editName, setEditName, ed
             </div>
           )}
         </div>
+        <div className="form-group">
+          <label>この日 絶対に休みにするスタッフ</label>
+          <p className="hint-text-sm">チェックしたスタッフはこの日 必ず休み（O）になります。確実に休ませたい時に使います</p>
+          {staff.length === 0 ? (
+            <p className="empty-msg">スタッフが未登録です</p>
+          ) : (
+            <div className="staff-checkbox-list">
+              {staff.map((s) => (
+                <label key={s.id} className="staff-checkbox-item staff-checkbox-forbidden">
+                  <input
+                    type="checkbox"
+                    checked={editForbiddenIds.includes(s.id)}
+                    onChange={() => toggleForbidden(s.id)}
+                  />
+                  <span className="staff-checkbox-name">{s.name}</span>
+                  {s.role && <span className="staff-checkbox-role">{s.role}</span>}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+        {hasConflict && (
+          <p className="error-msg">
+            同じスタッフを「必ず出勤」と「絶対休み」の両方に指定することはできません
+          </p>
+        )}
       </div>
       <div className="side-panel-footer">
-        <button className="btn btn-primary" onClick={onSave} disabled={editName.trim() === ''}>
+        <button className="btn btn-primary" onClick={onSave} disabled={!canSave || hasConflict}>
           保存
         </button>
         {canDelete && (
@@ -78,6 +102,7 @@ export default function EventCalendar() {
   const [selectedDay, setSelectedDay] = useState(null)
   const [editName, setEditName] = useState('')
   const [editStaffIds, setEditStaffIds] = useState([])
+  const [editForbiddenIds, setEditForbiddenIds] = useState([])
   const isMobile = useIsMobile()
 
   const numDays = new Date(year, month, 0).getDate()
@@ -103,16 +128,20 @@ export default function EventCalendar() {
     setSelectedDay(day)
     setEditName(dc?.event_name || '')
     setEditStaffIds(dc?.required_staff_ids || [])
+    setEditForbiddenIds(dc?.forbidden_staff_ids || [])
   }
 
   const handleSave = () => {
     if (!selectedDay) return
     const date = getDateStr(selectedDay)
-    const hasEvent = editName.trim() !== ''
+    // イベント名がある、または必須出勤/絶対休みが1人でも居れば「特別日」とみなす
+    const hasContent =
+      editName.trim() !== '' || editStaffIds.length > 0 || editForbiddenIds.length > 0
     updateDayCondition(date, {
-      event_flag: hasEvent,
-      event_name: hasEvent ? editName.trim() : null,
-      required_staff_ids: hasEvent ? editStaffIds : [],
+      event_flag: hasContent,
+      event_name: editName.trim() || null,
+      required_staff_ids: editStaffIds,
+      forbidden_staff_ids: editForbiddenIds,
     })
     setSelectedDay(null)
   }
@@ -124,12 +153,19 @@ export default function EventCalendar() {
       event_flag: false,
       event_name: null,
       required_staff_ids: [],
+      forbidden_staff_ids: [],
     })
     setSelectedDay(null)
   }
 
   const toggleStaff = (id) => {
     setEditStaffIds((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    )
+  }
+
+  const toggleForbidden = (id) => {
+    setEditForbiddenIds((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     )
   }
@@ -149,7 +185,10 @@ export default function EventCalendar() {
   const selectedDc = selectedDateStr ? dcMap[selectedDateStr] : null
 
   const panelProps = {
-    year, month, selectedDay, staff, editName, setEditName, editStaffIds, toggleStaff,
+    year, month, selectedDay, staff,
+    editName, setEditName,
+    editStaffIds, toggleStaff,
+    editForbiddenIds, toggleForbidden,
     onSave: handleSave, onDelete: handleDelete, onClose: () => setSelectedDay(null),
     canDelete: selectedDc?.event_flag,
   }
@@ -193,12 +232,21 @@ export default function EventCalendar() {
                       </span>
                       {event && (
                         <div className="event-label" style={{ backgroundColor: EVENT_COLOR }}>
-                          <span className="event-label-text">{event.event_name}</span>
+                          <span className="event-label-text">
+                            {event.event_name || '休み/出勤 指定'}
+                          </span>
                         </div>
                       )}
-                      {event && event.required_staff_ids.length > 0 && (
+                      {event && (
                         <div className="event-staff-count">
-                          {event.required_staff_ids.length}名
+                          {event.required_staff_ids?.length > 0 && (
+                            <span title="必ず出勤">出{event.required_staff_ids.length}</span>
+                          )}
+                          {event.forbidden_staff_ids?.length > 0 && (
+                            <span title="絶対休み" style={{ marginLeft: 4 }}>
+                              休{event.forbidden_staff_ids.length}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
@@ -222,7 +270,8 @@ export default function EventCalendar() {
                     <tr>
                       <th>日付</th>
                       <th>イベント名</th>
-                      <th>必須出席スタッフ</th>
+                      <th>必ず出勤</th>
+                      <th>絶対休み</th>
                       <th>操作</th>
                     </tr>
                   </thead>
@@ -234,19 +283,37 @@ export default function EventCalendar() {
                         <tr key={dc.date}>
                           <td>{dc.date}</td>
                           <td>
-                            <span className="event-name-badge" style={{ backgroundColor: EVENT_COLOR }}>
-                              {dc.event_name}
-                            </span>
+                            {dc.event_name ? (
+                              <span className="event-name-badge" style={{ backgroundColor: EVENT_COLOR }}>
+                                {dc.event_name}
+                              </span>
+                            ) : (
+                              <span style={{ color: '#999' }}>（名前なし）</span>
+                            )}
                           </td>
                           <td>
-                            {dc.required_staff_ids.length === 0 ? (
-                              <span style={{ color: '#999' }}>指定なし</span>
+                            {(dc.required_staff_ids || []).length === 0 ? (
+                              <span style={{ color: '#999' }}>—</span>
                             ) : (
                               <div className="staff-chips">
                                 {dc.required_staff_ids.map((sid) => {
                                   const s = staff.find((st) => st.id === sid)
                                   return s ? (
                                     <span key={sid} className="staff-chip">{s.name}</span>
+                                  ) : null
+                                })}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            {(dc.forbidden_staff_ids || []).length === 0 ? (
+                              <span style={{ color: '#999' }}>—</span>
+                            ) : (
+                              <div className="staff-chips">
+                                {dc.forbidden_staff_ids.map((sid) => {
+                                  const s = staff.find((st) => st.id === sid)
+                                  return s ? (
+                                    <span key={sid} className="staff-chip staff-chip-off">{s.name}</span>
                                   ) : null
                                 })}
                               </div>
@@ -281,9 +348,10 @@ export default function EventCalendar() {
                 .slice()
                 .sort((a, b) => a.date.localeCompare(b.date))
                 .map((dc) => {
-                  const d = new Date(dc.date)
-                  const dayNum = d.getDate()
-                  const wday = DAY_NAMES[d.getDay()]
+                  // タイムゾーン非依存で曜日算出
+                  const [ey, em, ed] = dc.date.split('-').map(Number)
+                  const dayNum = ed
+                  const wday = DAY_NAMES[new Date(ey, em - 1, ed).getDay()]
                   return (
                     <div
                       key={dc.date}
@@ -296,13 +364,23 @@ export default function EventCalendar() {
                       </div>
                       <div className="event-card-body">
                         <span className="event-name-badge" style={{ backgroundColor: EVENT_COLOR }}>
-                          {dc.event_name}
+                          {dc.event_name || '休み/出勤 指定'}
                         </span>
-                        {dc.required_staff_ids.length > 0 && (
+                        {dc.required_staff_ids?.length > 0 && (
                           <div className="staff-chips" style={{ marginTop: 4 }}>
+                            <span className="chip-label">出勤:</span>
                             {dc.required_staff_ids.map((sid) => {
                               const s = staff.find((st) => st.id === sid)
                               return s ? <span key={sid} className="staff-chip">{s.name}</span> : null
+                            })}
+                          </div>
+                        )}
+                        {dc.forbidden_staff_ids?.length > 0 && (
+                          <div className="staff-chips" style={{ marginTop: 4 }}>
+                            <span className="chip-label">休み:</span>
+                            {dc.forbidden_staff_ids.map((sid) => {
+                              const s = staff.find((st) => st.id === sid)
+                              return s ? <span key={sid} className="staff-chip staff-chip-off">{s.name}</span> : null
                             })}
                           </div>
                         )}
@@ -323,15 +401,32 @@ export default function EventCalendar() {
       )}
 
       {/* Mobile: Bottom sheet modal */}
-      {selectedDay !== null && isMobile && ReactDOM.createPortal(
-        <div className="mobile-sheet-overlay" onClick={(e) => { if (e.target === e.currentTarget) setSelectedDay(null) }}>
-          <div className="mobile-sheet">
-            <div className="mobile-sheet-handle" />
-            <EventPanel {...panelProps} />
-          </div>
-        </div>,
-        document.body
+      {selectedDay !== null && isMobile && (
+        <EventSheet onClose={() => setSelectedDay(null)} panelProps={panelProps} />
       )}
     </div>
+  )
+}
+
+// モバイル用ボトムシート（Escで閉じる・フォーカストラップ付き）
+function EventSheet({ onClose, panelProps }) {
+  const sheetRef = useModalA11y(true, onClose)
+  return ReactDOM.createPortal(
+    <div
+      className="mobile-sheet-overlay"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div
+        className="mobile-sheet"
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="イベント編集"
+      >
+        <div className="mobile-sheet-handle" />
+        <EventPanel {...panelProps} />
+      </div>
+    </div>,
+    document.body
   )
 }

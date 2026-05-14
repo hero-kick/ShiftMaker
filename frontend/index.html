@@ -6,15 +6,50 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>ShiftMaker - 看護師シフト管理</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+    <title>ShiftMaker — 看護師シフト自動作成</title>
+    <meta
+      name="description"
+      content="看護師の勤務シフトを自動で公平に作成。夜勤・公休・土日休みのバランス、希望休、ペア制約に対応。スマホからも使えます。"
+    />
+    <meta name="theme-color" content="#1565C0" />
+    <meta name="color-scheme" content="light" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="ShiftMaker" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- OGP（共有時の見栄え） -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ShiftMaker — 看護師シフト自動作成" />
+    <meta
+      property="og:description"
+      content="夜勤・公休・土日休みを公平に。希望休やペア制約にも対応した看護師シフト自動作成ツール。"
+    />
+    <meta property="og:locale" content="ja_JP" />
+
+    <!-- インライン SVG ファビコン（外部ファイル不要・カレンダー＋チェック） -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap"
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231565C0'/%3E%3Crect x='6' y='8' width='20' height='18' rx='2.5' fill='none' stroke='white' stroke-width='2'/%3E%3Cpath d='M6 13h20' stroke='white' stroke-width='2'/%3E%3Cpath d='M11 5v5M21 5v5' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M11 19l3.5 3.5L22 16' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231565C0'/%3E%3Crect x='6' y='8' width='20' height='18' rx='2.5' fill='none' stroke='white' stroke-width='2'/%3E%3Cpath d='M6 13h20' stroke='white' stroke-width='2'/%3E%3Cpath d='M11 5v5M21 5v5' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M11 19l3.5 3.5L22 16' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      このアプリの利用には JavaScript が必要です。ブラウザの設定で JavaScript を有効にしてください。
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

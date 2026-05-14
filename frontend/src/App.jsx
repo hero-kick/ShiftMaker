@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import useStore from './store/useStore'
 import { generateShift, getSampleData } from './api/client'
 import { getCurrentWorkspace, setCurrentWorkspaceId } from './workspace'
+import Dashboard from './components/Dashboard'
 import StaffManager from './components/StaffManager'
 import WishInput from './components/WishInput'
 import DayConditionInput from './components/DayConditionInput'
@@ -11,10 +12,16 @@ import ShiftSummary from './components/ShiftSummary'
 import Guide from './components/Guide'
 import {
   IconStaff, IconCalendar, IconStar, IconSettings, IconTable, IconChart,
-  IconPlay, IconHelp, IconMenu, IconUser, IconRefresh, IconClose, IconTrash,
+  IconPlay, IconHelp, IconMenu, IconUser, IconRefresh, IconTrash, IconHome,
 } from './components/Icons'
+import useIsMobile from './hooks/useIsMobile'
+import useModalA11y from './hooks/useModalA11y'
+import { checkHealth } from './api/client'
+import { isStorageNearFull } from './safeStorage'
+import { blankDayCondition } from './defaults'
 
 const TABS = [
+  { id: 'home',      label: 'ホーム',   shortLabel: 'ホーム',   step: 0, Icon: IconHome },
   { id: 'staff',     label: 'スタッフ', shortLabel: 'スタッフ', step: 1, Icon: IconStaff },
   { id: 'wish',      label: '希望',     shortLabel: '希望',     step: 2, Icon: IconCalendar },
   { id: 'event',     label: 'イベント', shortLabel: 'イベント', step: 3, Icon: IconStar },
@@ -25,36 +32,42 @@ const TABS = [
 
 const ONBOARDING_KEY = 'shiftmaker-seen-onboarding'
 
-function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' && window.innerWidth <= breakpoint
-  )
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`)
-    const handler = (e) => setIsMobile(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [breakpoint])
-  return isMobile
-}
-
 export default function App() {
-  const [activeTab, setActiveTab] = useState('staff')
+  const [activeTab, setActiveTab] = useState('home')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
   const [onboardingOpen, setOnboardingOpen] = useState(false)
+  const [storageWarning, setStorageWarning] = useState(false)
+  const [apiOffline, setApiOffline] = useState(false)
   const isMobile = useIsMobile()
   const currentWs = getCurrentWorkspace()
 
-  // 初回ユーザー: ワークスペース作成直後で staff も空ならオンボーディング表示
   useEffect(() => {
     try {
       const seen = localStorage.getItem(ONBOARDING_KEY)
       if (!seen) setOnboardingOpen(true)
     } catch {}
+  }, [])
+
+  // localStorage 容量超過の検知
+  useEffect(() => {
+    const onStorageError = () => setStorageWarning(true)
+    window.addEventListener('shiftmaker-storage-error', onStorageError)
+    // 起動時にも近接チェック
+    if (isStorageNearFull()) setStorageWarning(true)
+    return () => window.removeEventListener('shiftmaker-storage-error', onStorageError)
+  }, [])
+
+  // バックエンド疎通チェック（起動時 + 失敗時の再確認は generate でカバー）
+  useEffect(() => {
+    let cancelled = false
+    checkHealth()
+      .then(() => { if (!cancelled) setApiOffline(false) })
+      .catch(() => { if (!cancelled) setApiOffline(true) })
+    return () => { cancelled = true }
   }, [])
 
   const dismissOnboarding = (openGuide = false) => {
@@ -63,6 +76,9 @@ export default function App() {
     if (openGuide) setGuideOpen(true)
   }
 
+  // オンボーディングモーダルの a11y（Escで閉じる・フォーカストラップ）
+  const onboardingRef = useModalA11y(onboardingOpen, () => dismissOnboarding(false))
+
   const handleSwitchWorkspace = () => {
     if (!window.confirm('ワークスペースを切り替えますか？（未保存の操作がある場合は先に完了してください）')) return
     setCurrentWorkspaceId(null)
@@ -70,37 +86,24 @@ export default function App() {
   }
 
   const {
-    staff,
-    wishes,
-    dayConditions,
-    pairs,
-    shiftTypes,
-    year,
-    month,
-    schedule,
-    schedules,
-    setYear,
-    setMonth,
-    setScheduleForMonth,
-    loadScheduleForMonth,
-    getPrevLastShifts,
-    loadSampleData,
-    initDayConditions,
-    clearAll,
+    staff, wishes, dayConditions, pairs, shiftTypes,
+    year, month, schedule, schedules, locks,
+    setYear, setMonth, setScheduleForMonth, loadScheduleForMonth,
+    getPrevLastShifts, getPrevConsecutiveWork, loadSampleData, initDayConditions, clearAll,
+    isMonthFinalized,
   } = useStore()
 
-  // 月切り替え時: dayConditions初期化 + その月のスケジュールを復元
+  const monthFinalized = isMonthFinalized(year, month)
+
   useEffect(() => {
     initDayConditions()
     loadScheduleForMonth(year, month)
   }, [year, month])
 
-  // ページ初期化時もスケジュール復元
   useEffect(() => {
     loadScheduleForMonth(year, month)
   }, [])
 
-  // 成功メッセージ自動消去（3.5秒）
   useEffect(() => {
     if (successMsg) {
       const t = setTimeout(() => setSuccessMsg(''), 3500)
@@ -108,7 +111,6 @@ export default function App() {
     }
   }, [successMsg])
 
-  // Close mobile more menu on outside tap
   useEffect(() => {
     if (!mobileMoreOpen) return
     const handler = (e) => {
@@ -124,7 +126,6 @@ export default function App() {
     }
   }, [mobileMoreOpen])
 
-  // 前月末シフトの引き継ぎ情報
   const prevLastShifts = getPrevLastShifts()
   const prevNightCarryovers = Object.entries(prevLastShifts)
     .filter(([, sc]) => sc === 'N')
@@ -145,15 +146,7 @@ export default function App() {
     for (let d = 1; d <= numDays; d++) {
       const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`
       const existing = dayConditions.find((dc) => dc.date === dateStr)
-      fullDayConditions.push(
-        existing || {
-          date: dateStr,
-          required_per_shift: { D: 3, N: 2 },
-          event_flag: false,
-          required_staff_ids: [],
-          forbidden_staff_ids: [],
-        }
-      )
+      fullDayConditions.push(existing || blankDayCondition(dateStr))
     }
 
     const payload = {
@@ -165,15 +158,30 @@ export default function App() {
       year,
       month,
       prev_last_shifts: prevLastShifts,
+      prev_consecutive_work: getPrevConsecutiveWork(),
+      locked_shifts: locks || {},
     }
 
     try {
       const res = await generateShift(payload)
       setScheduleForMonth(year, month, res.data.schedule, res.data.summary)
       setSuccessMsg('シフトの生成が完了しました！')
+      setApiOffline(false)
       setActiveTab('table')
     } catch (err) {
-      setError(err.message || 'シフト生成に失敗しました')
+      // ネットワーク起因か業務エラーかを区別
+      const msg = err.message || 'シフト生成に失敗しました'
+      const isNetwork =
+        /Network Error|timeout|ECONNREFUSED|Failed to fetch|サーバーとの通信/.test(msg)
+      if (isNetwork) {
+        setApiOffline(true)
+        setError(
+          'サーバーに接続できませんでした。\n' +
+          'しばらく待ってから再度お試しください。問題が続く場合は管理者にご連絡ください。'
+        )
+      } else {
+        setError(msg)
+      }
     } finally {
       setLoading(false)
     }
@@ -186,7 +194,7 @@ export default function App() {
     try {
       setLoading(true)
       setError('')
-      const res = await getSampleData()
+      const res = await getSampleData(year, month)
       loadSampleData(res.data)
       setSuccessMsg('サンプルデータを読み込みました')
     } catch (err) {
@@ -206,7 +214,6 @@ export default function App() {
 
   const prevYear = month === 1 ? year - 1 : year
   const prevMonth = month === 1 ? 12 : month - 1
-  const hasPrevSchedule = !!schedules[`${prevYear}-${String(prevMonth).padStart(2, '0')}`]
 
   const tabBadge = (tabId) => {
     if (tabId === 'staff' && staff.length > 0) return staff.length
@@ -215,7 +222,10 @@ export default function App() {
       const cnt = dayConditions.filter((dc) => dc.event_flag).length
       if (cnt > 0) return cnt
     }
-    if (tabId === 'table' && schedule) return '✓'
+    if (tabId === 'table' && schedule) {
+      const lockCount = Object.values(locks || {}).reduce((s, m) => s + Object.keys(m).length, 0)
+      return lockCount > 0 ? `🔒${lockCount}` : '✓'
+    }
     return null
   }
 
@@ -303,20 +313,26 @@ export default function App() {
               <IconHelp size={22} /> 使い方
             </button>
             <div className="month-selector">
-              <label>対象月</label>
-              <input
-                type="number"
+              <label htmlFor="year-input">対象月</label>
+              <select
+                id="year-input"
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
-                min="2020"
-                max="2030"
-                className="year-input"
-              />
-              年
+                className="month-input"
+                aria-label="年を選択"
+              >
+                {(() => {
+                  const cur = new Date().getFullYear()
+                  return Array.from({ length: 7 }, (_, i) => cur - 2 + i).map((y) => (
+                    <option key={y} value={y}>{y}年</option>
+                  ))
+                })()}
+              </select>
               <select
                 value={month}
                 onChange={(e) => setMonth(Number(e.target.value))}
                 className="month-input"
+                aria-label="月を選択"
               >
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                   <option key={m} value={m}>
@@ -355,7 +371,6 @@ export default function App() {
         </header>
       )}
 
-      {/* 前月末夜勤の引き継ぎ通知 */}
       {prevNightCarryovers.length > 0 && (
         <div className="carryover-bar">
           <span className="carryover-icon">↩</span>
@@ -365,28 +380,54 @@ export default function App() {
         </div>
       )}
 
-      {/* Toast messages */}
-      {(error || successMsg) && (
-        <div className={`message-toast ${error ? 'message-error' : 'message-success'} ${isMobile ? 'message-toast-mobile' : ''}`}>
-          <span>{error || successMsg}</span>
-          <button className="message-close" onClick={() => { setError(''); setSuccessMsg('') }}>×</button>
+      {/* API 障害バナー */}
+      {apiOffline && (
+        <div className="offline-banner" role="alert">
+          ⚠ サーバーに接続できません。シフト生成は一時的に利用できませんが、入力したデータは保存されています。
         </div>
       )}
 
-      {/* Desktop tab nav */}
+      {/* localStorage 容量警告 */}
+      {storageWarning && (
+        <div className="storage-warning" role="alert">
+          <span>
+            ⚠ 端末の保存容量が上限に近づいています。不要なワークスペースや古い月のデータを整理してください。
+          </span>
+          <button onClick={() => setStorageWarning(false)}>閉じる</button>
+        </div>
+      )}
+
+      {(error || successMsg) && (
+        <div
+          className={`message-toast ${error ? 'message-error' : 'message-success'} ${isMobile ? 'message-toast-mobile' : ''}`}
+          role={error ? 'alert' : 'status'}
+        >
+          <span>{error || successMsg}</span>
+          <button
+            className="message-close"
+            onClick={() => { setError(''); setSuccessMsg('') }}
+            aria-label="メッセージを閉じる"
+          >×</button>
+        </div>
+      )}
+
       {!isMobile && (
-        <nav className="tab-nav">
+        <nav className="tab-nav" role="tablist" aria-label="メイン画面切り替え">
           {TABS.map((tab) => {
             const badge = tabBadge(tab.id)
             const Icon = tab.Icon
+            const isActive = activeTab === tab.id
             return (
               <button
                 key={tab.id}
-                className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+                role="tab"
+                aria-selected={isActive}
+                aria-current={isActive ? 'page' : undefined}
+                className={`tab-btn ${isActive ? 'active' : ''}`}
                 onClick={() => setActiveTab(tab.id)}
               >
                 <span className="tab-icon"><Icon size={26} /></span>
-                <span className="tab-step">{tab.step}</span>
+                {tab.step > 0 && <span className="tab-step">{tab.step}</span>}
                 <span className="tab-label">{tab.label}</span>
                 {badge !== null && (
                   <span className="tab-badge" style={
@@ -401,6 +442,13 @@ export default function App() {
       )}
 
       <main className="app-main">
+        {activeTab === 'home' && (
+          <Dashboard
+            onJumpToTab={(id) => setActiveTab(id)}
+            onGenerate={handleGenerate}
+            loading={loading}
+          />
+        )}
         {activeTab === 'staff' && <StaffManager />}
         {activeTab === 'wish' && <WishInput />}
         {activeTab === 'event' && <EventCalendar />}
@@ -409,29 +457,36 @@ export default function App() {
         {activeTab === 'summary' && <ShiftSummary />}
       </main>
 
-      {/* Full-screen loading overlay */}
-      {loading && isMobile && (
-        <div className="loading-overlay">
+      {loading && (
+        <div className="loading-overlay" role="status" aria-live="polite">
           <div className="loading-overlay-content">
             <div className="loading-overlay-spinner" />
             <div className="loading-overlay-text">シフト生成中...</div>
-            <div className="loading-overlay-sub">最大1分ほどかかる場合があります</div>
+            <div className="loading-overlay-sub">
+              公平性を最適化しています。最大1分ほどかかる場合があります
+            </div>
           </div>
         </div>
       )}
 
       {!isMobile && (
         <footer className="app-footer">
-          <span>ShiftMaker v2.1 &copy; 2026 — データはブラウザに自動保存（直近3ヶ月）</span>
+          <span>ShiftMaker v3.0 &copy; 2026 — データはブラウザに自動保存（直近3ヶ月）</span>
         </footer>
       )}
 
-      {/* Onboarding (first visit after workspace creation) */}
       {onboardingOpen && (
         <div className="onboarding-overlay" onClick={() => dismissOnboarding(false)}>
-          <div className="onboarding-card" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="onboarding-card"
+            onClick={(e) => e.stopPropagation()}
+            ref={onboardingRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="onboarding-title"
+          >
             <div className="onboarding-icon">👋</div>
-            <h2 className="onboarding-title">ようこそ</h2>
+            <h2 className="onboarding-title" id="onboarding-title">ようこそ</h2>
             <p className="onboarding-lead">
               3ステップでシフトが完成します
             </p>
@@ -466,23 +521,25 @@ export default function App() {
         </div>
       )}
 
-      {/* Usage guide */}
       <Guide
         open={guideOpen}
         onClose={() => setGuideOpen(false)}
         onJumpToTab={(tabId) => setActiveTab(tabId)}
       />
 
-      {/* Mobile bottom tab bar */}
       {isMobile && (
-        <nav className="mobile-bottom-nav">
+        <nav className="mobile-bottom-nav" role="tablist" aria-label="メイン画面切り替え">
           {TABS.map((tab) => {
             const badge = tabBadge(tab.id)
             const Icon = tab.Icon
+            const isActive = activeTab === tab.id
             return (
               <button
                 key={tab.id}
-                className={`mobile-bottom-tab ${activeTab === tab.id ? 'active' : ''}`}
+                role="tab"
+                aria-selected={isActive}
+                aria-current={isActive ? 'page' : undefined}
+                className={`mobile-bottom-tab ${isActive ? 'active' : ''}`}
                 onClick={() => { setActiveTab(tab.id); window.scrollTo(0, 0) }}
               >
                 <span className="mobile-tab-icon"><Icon size={26} /></span>

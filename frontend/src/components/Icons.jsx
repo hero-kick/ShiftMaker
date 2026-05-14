@@ -291,3 +291,205 @@ export function IconCoin({ size = 22, className }) {
     </svg>
   )
 }
+
+export function IconHome({ size = 28, className }) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z" fill="currentColor" fillOpacity=".15" />
+    </svg>
+  )
+}
+
+export function IconPin({ size = 22, className }) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M12 21V13" />
+      <path d="M7 9a5 5 0 0 1 10 0v4H7z" fill="currentColor" fillOpacity=".25" />
+    </svg>
+  )
+}
+
+export function IconNote({ size = 22, className }) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M5 4h11l4 4v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" fill="currentColor" fillOpacity=".1" />
+      <path d="M8 12h8M8 16h6M8 8h5" />
+    </svg>
+  )
+}
+
+export function IconShield({ size = 22, className }) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M12 3l8 3v6c0 4.5-3.5 8.4-8 9-4.5-.6-8-4.5-8-9V6z" fill="currentColor" fillOpacity=".15" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  )
+}
+
+export function IconScale({ size = 22, className }) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M12 4v16" />
+      <path d="M5 9l3-5 3 5z" fill="currentColor" fillOpacity=".15" />
+      <path d="M13 9l3-5 3 5z" fill="currentColor" fillOpacity=".15" />
+      <path d="M4 20h16" />
+    </svg>
+  )
+}
+
+export function IconFlame({ size = 22, className }) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M12 3c2 4 6 5 6 10a6 6 0 0 1-12 0c0-3 2-4 3-7 1 2 2 3 3 3-.5-2 0-4 0-6z" fill="currentColor" fillOpacity=".2" />
+    </svg>
+  )
+}
+
+export function IconLightbulb({ size = 22, className }) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M9 18h6" />
+      <path d="M10 21h4" />
+      <path d="M12 3a6 6 0 0 0-4 10.5c1 1 1.5 1.7 1.5 2.5h5c0-.8.5-1.5 1.5-2.5A6 6 0 0 0 12 3z" fill="currentColor" fillOpacity=".2" />
+    </svg>
+  )
+}
+
+/* =============================================================== */
+/* === シフト用 かわいいアイコン（カレンダー表示で使用）========= */
+/*  baseProps は使わず、塗り中心の親しみやすいデザイン            */
+/* =============================================================== */
+
+function shiftSvg(size) {
+  return {
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    'aria-hidden': true,
+  }
+}
+
+// 日勤 — にっこり太陽
+export function ShiftDay({ size = 26 }) {
+  return (
+    <svg {...shiftSvg(size)}>
+      <g stroke="#FBC02D" strokeWidth="2" strokeLinecap="round">
+        <path d="M12 1.5v2.2M12 20.3v2.2M1.5 12h2.2M20.3 12h2.2M4.4 4.4l1.6 1.6M18 18l1.6 1.6M19.6 4.4L18 6M6 18l-1.6 1.6" />
+      </g>
+      <circle cx="12" cy="12" r="6" fill="#FFD54F" />
+      <circle cx="9.7" cy="11" r="1.05" fill="#6D4C00" />
+      <circle cx="14.3" cy="11" r="1.05" fill="#6D4C00" />
+      <path d="M9.8 13.6c.6.8 1.4 1.2 2.2 1.2s1.6-.4 2.2-1.2" stroke="#6D4C00" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="8.3" cy="13" r="0.9" fill="#FF8A65" opacity="0.55" />
+      <circle cx="15.7" cy="13" r="0.9" fill="#FF8A65" opacity="0.55" />
+    </svg>
+  )
+}
+
+// 早番 — 昇る朝日（上向き矢印つき）
+export function ShiftEarly({ size = 26 }) {
+  return (
+    <svg {...shiftSvg(size)}>
+      <g stroke="#00ACC1" strokeWidth="1.8" strokeLinecap="round">
+        <path d="M12 2v2.4M5.2 5.6l1.5 1.5M18.8 5.6l-1.5 1.5" />
+      </g>
+      <path d="M5.5 14.5a6.5 6.5 0 0 1 13 0z" fill="#4DD0E1" />
+      <path d="M3 17.6h18" stroke="#00ACC1" strokeWidth="2.2" strokeLinecap="round" />
+      <circle cx="10" cy="12.4" r="0.9" fill="#fff" />
+      <circle cx="14" cy="12.4" r="0.9" fill="#fff" />
+      <path d="M10.4 13.9c.5.5 1.1.7 1.6.7s1.1-.2 1.6-.7" stroke="#fff" strokeWidth="1.1" strokeLinecap="round" />
+      <path d="M12 8.6l-1.3 1.6h2.6z" fill="#fff" />
+    </svg>
+  )
+}
+
+// 夜勤（入り）— 三日月＋お星さま、すやすや顔
+export function ShiftNight({ size = 26 }) {
+  return (
+    <svg {...shiftSvg(size)}>
+      <path d="M19 4.2l.55 1.45L21 6.2l-1.45.55L19 8.2l-.55-1.45L17 6.2l1.45-.55z" fill="#CE93D8" />
+      <circle cx="20.5" cy="10.5" r="0.9" fill="#CE93D8" />
+      <path d="M14.5 3.2A9 9 0 1 0 21 16.4 7.2 7.2 0 0 1 14.5 3.2z" fill="#AB47BC" />
+      <path d="M8.6 11.2c.5-.5 1.1-.5 1.6 0M11.6 13c.5-.5 1.1-.5 1.6 0" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="9.2" cy="13.6" r="0.85" fill="#F8BBD0" opacity="0.8" />
+    </svg>
+  )
+}
+
+// 夜勤明け — ほかほかコーヒー（おつかれさま）、にっこり顔
+export function ShiftAke({ size = 26 }) {
+  return (
+    <svg {...shiftSvg(size)}>
+      <path d="M8.5 3c.9.9.9 1.8 0 2.7M12 2.4c.9.9.9 1.8 0 2.7M15.5 3c.9.9.9 1.8 0 2.7"
+        stroke="#FFB74D" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M4.5 8.5h12v5.2a4.3 4.3 0 0 1-4.3 4.3H8.8a4.3 4.3 0 0 1-4.3-4.3z" fill="#FB8C00" />
+      <path d="M16.5 9.8h2.1a2.2 2.2 0 0 1 0 4.4h-2.1" stroke="#FB8C00" strokeWidth="2.1" strokeLinecap="round" />
+      <circle cx="8.7" cy="12" r="0.95" fill="#fff" />
+      <circle cx="12.3" cy="12" r="0.95" fill="#fff" />
+      <path d="M9 14c.7.7 1.5 1 2.5 1s1.8-.3 2.5-1" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M4.5 19.5h13" stroke="#E65100" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// 遅番 — 沈む夕日（下向き矢印つき）
+export function ShiftLate({ size = 26 }) {
+  return (
+    <svg {...shiftSvg(size)}>
+      <path d="M5.5 14.5a6.5 6.5 0 0 1 13 0z" fill="#7986CB" />
+      <path d="M3 17.6h18" stroke="#3949AB" strokeWidth="2.2" strokeLinecap="round" />
+      <g stroke="#3949AB" strokeWidth="1.8" strokeLinecap="round">
+        <path d="M12 2.2v2.2M5.6 5.4l1.4 1.4M18.4 5.4l-1.4 1.4" />
+      </g>
+      <circle cx="10" cy="12.4" r="0.9" fill="#fff" />
+      <circle cx="14" cy="12.4" r="0.9" fill="#fff" />
+      <path d="M10.4 14.3c.5-.5 1.1-.7 1.6-.7s1.1.2 1.6.7" stroke="#fff" strokeWidth="1.1" strokeLinecap="round" />
+      <path d="M12 10.4l1.3-1.6h-2.6z" fill="#fff" />
+    </svg>
+  )
+}
+
+// 休日 — おうちでのんびり（ハートの窓）
+export function ShiftOff({ size = 26 }) {
+  return (
+    <svg {...shiftSvg(size)}>
+      <path d="M12 3.4l8.2 6.7v9.5a1 1 0 0 1-1 1H4.8a1 1 0 0 1-1-1v-9.5z" fill="#90A4AE" />
+      <path d="M12 3l9 7.4H3z" fill="#607D8B" />
+      <rect x="9.8" y="14.5" width="4.4" height="5.6" rx="1" fill="#ECEFF1" />
+      <path d="M12 9.2c-.7-.95-2.4-.6-2.4.65 0 .9 1.1 1.6 2.4 2.45 1.3-.85 2.4-1.55 2.4-2.45 0-1.25-1.7-1.6-2.4-.65z" fill="#FF8A80" />
+    </svg>
+  )
+}
+
+// 有給 — 南国気分のヤシの木とお日さま
+export function ShiftPaid({ size = 26 }) {
+  return (
+    <svg {...shiftSvg(size)}>
+      <circle cx="18.5" cy="5.5" r="2.6" fill="#FFD54F" />
+      <path d="M10.5 20.5c0-5 .6-9 1-12.5" stroke="#8D6E63" strokeWidth="2.1" strokeLinecap="round" />
+      <path d="M11.5 8c-3-2.2-6.2-1.3-7.5.8 3-.7 5.2-.2 7.5-.8z" fill="#2196F3" />
+      <path d="M11.5 8c2.8-2.4 6.1-1.8 7.7.2-3-.9-5.3-.6-7.7-.2z" fill="#42A5F5" />
+      <path d="M11.5 8c-1.1-3 .1-6.1 2.3-7.2-1.1 3-1.2 5.1-2.3 7.2z" fill="#1E88E5" />
+      <path d="M4 20.5h16" stroke="#FFD54F" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// シフトコード → かわいいアイコン の振り分け
+const SHIFT_ICON_MAP = {
+  D: ShiftDay,
+  E: ShiftEarly,
+  N: ShiftNight,
+  A: ShiftAke,
+  L: ShiftLate,
+  O: ShiftOff,
+  Y: ShiftPaid,
+}
+
+export function ShiftIcon({ code, size = 26 }) {
+  const Cmp = SHIFT_ICON_MAP[code]
+  if (!Cmp) return null
+  return <Cmp size={size} />
+}

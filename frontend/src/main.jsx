@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import WorkspaceGate from './WorkspaceGate.jsx'
+import ErrorBoundary from './ErrorBoundary.jsx'
 import { getCurrentWorkspaceId } from './workspace'
 import './App.css'
 
@@ -24,6 +25,8 @@ function Root() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Root />
+    <ErrorBoundary>
+      <Root />
+    </ErrorBoundary>
   </React.StrictMode>
 )

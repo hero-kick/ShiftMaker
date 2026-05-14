@@ -1,14 +1,14 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { getCurrentWorkspaceId, storageKeyFor } from '../workspace'
+import { safeStorage } from '../safeStorage'
+import { defaultRequiredForDate, blankDayCondition } from '../defaults'
 
-// 現在選択中のワークスペース単位で独立した localStorage キーを使う。
-// ワークスペース未選択のときは一時的な揮発領域に書く（Gate 画面通過前の保険）。
 const activeWorkspaceId = getCurrentWorkspaceId()
 const STORAGE_KEY = activeWorkspaceId
   ? storageKeyFor(activeWorkspaceId)
   : 'shiftmaker-v2-__unassigned__'
-const MAX_STORED_MONTHS = 3  // 直近3ヶ月分のスケジュールを保持
+const MAX_STORED_MONTHS = 3
 
 const DEFAULT_SHIFT_TYPES = [
   { code: 'D', name: '日勤', color: '#4CAF50' },
@@ -24,10 +24,25 @@ function monthKey(year, month) {
   return `${year}-${String(month).padStart(2, '0')}`
 }
 
+const STAFF_DEFAULTS = {
+  night_available: true,
+  max_night: 8,
+  max_consecutive_days: 5,
+  is_rookie: false,
+  can_lead: false,
+  max_consecutive_nights: 2,
+  fixed_off_weekdays: [],
+  weekend_off_target: null,
+}
+
+function withStaffDefaults(s) {
+  return { ...STAFF_DEFAULTS, ...s }
+}
+
 const useStore = create(
   persist(
     (set, get) => ({
-      // --- マスタデータ（persisted）---
+      // ── マスタデータ（persisted）──
       staff: [],
       wishes: [],
       dayConditions: [],
@@ -36,13 +51,15 @@ const useStore = create(
       year: new Date().getFullYear(),
       month: new Date().getMonth() + 1,
 
-      // --- 月別スケジュール（persisted, 直近3ヶ月）---
-      // { "2026-03": { schedule: {...}, summary: {...} }, ... }
+      // ── 月別スケジュール（persisted）──
+      // { "YYYY-MM": { schedule, summary, locks, notes } }
       schedules: {},
 
-      // --- アクティブスケジュール（non-persisted, 月切り替えで更新）---
+      // ── アクティブ（non-persisted）──
       schedule: null,
       summary: null,
+      locks: {},   // staffId -> { date: code }
+      notes: {},   // date -> string
 
       // ── 年月 ──
       setYear: (year) => set({ year }),
@@ -51,13 +68,12 @@ const useStore = create(
       // ── スタッフ ──
       addStaff: (staffMember) =>
         set((state) => ({
-          staff: [...state.staff, { ...staffMember, id: `s_${Date.now()}` }],
+          staff: [...state.staff, withStaffDefaults({ ...staffMember, id: `s_${Date.now()}` })],
         })),
 
-      addStaffBulk: ({ role, count, night_available, max_night, max_consecutive_days, is_rookie = false, can_lead = false }) =>
+      addStaffBulk: ({ role, count, ...rest }) =>
         set((state) => {
           const base = (role || '').trim() || 'スタッフ'
-          // 既に同じ役職で生成済みの番号を見て、続きから採番する
           const usedNumbers = new Set(
             state.staff
               .map((s) => {
@@ -71,16 +87,12 @@ const useStore = create(
           const now = Date.now()
           for (let i = 0; i < count; i++) {
             while (usedNumbers.has(nextNum)) nextNum += 1
-            newOnes.push({
+            newOnes.push(withStaffDefaults({
               id: `s_${now}_${i}`,
               name: `${base}${nextNum}`,
               role: base,
-              night_available,
-              max_night,
-              max_consecutive_days,
-              is_rookie,
-              can_lead,
-            })
+              ...rest,
+            }))
             usedNumbers.add(nextNum)
             nextNum += 1
           }
@@ -99,10 +111,20 @@ const useStore = create(
           pairs: state.pairs.filter((p) => p.staff_a_id !== id && p.staff_b_id !== id),
         })),
 
+      moveStaff: (id, direction) =>
+        set((state) => {
+          const idx = state.staff.findIndex((s) => s.id === id)
+          if (idx < 0) return state
+          const newIdx = direction === 'up' ? idx - 1 : idx + 1
+          if (newIdx < 0 || newIdx >= state.staff.length) return state
+          const arr = [...state.staff]
+          ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
+          return { staff: arr }
+        }),
+
       // ── ペア制約 ──
       addPair: (pair) =>
         set((state) => {
-          // 既存の同一ペア（順序不問）があれば置き換え
           const filtered = state.pairs.filter(
             (p) =>
               !(
@@ -148,14 +170,7 @@ const useStore = create(
           return {
             dayConditions: [
               ...state.dayConditions,
-              {
-                date,
-                required_per_shift: { D: 3, N: 2 },
-                event_flag: false,
-                required_staff_ids: [],
-                forbidden_staff_ids: [],
-                ...updates,
-              },
+              { ...blankDayCondition(date), ...updates },
             ],
           }
         }),
@@ -164,19 +179,28 @@ const useStore = create(
       setScheduleForMonth: (year, month, schedule, summary) =>
         set((state) => {
           const key = monthKey(year, month)
+          const prev = state.schedules[key] || {}
           const newSchedules = {
             ...state.schedules,
-            [key]: { schedule, summary },
+            [key]: {
+              ...prev,
+              schedule,
+              summary,
+            },
           }
-          // 直近 MAX_STORED_MONTHS ヶ月のみ保持
           const keys = Object.keys(newSchedules).sort().reverse()
           if (keys.length > MAX_STORED_MONTHS) {
             keys.slice(MAX_STORED_MONTHS).forEach((k) => delete newSchedules[k])
           }
-          return { schedule, summary, schedules: newSchedules }
+          return {
+            schedule,
+            summary,
+            schedules: newSchedules,
+            locks: prev.locks || {},
+            notes: prev.notes || {},
+          }
         }),
 
-      // 月切り替え時にその月のスケジュールを復元
       loadScheduleForMonth: (year, month) =>
         set((state) => {
           const key = monthKey(year, month)
@@ -184,10 +208,11 @@ const useStore = create(
           return {
             schedule: data?.schedule ?? null,
             summary: data?.summary ?? null,
+            locks: data?.locks ?? {},
+            notes: data?.notes ?? {},
           }
         }),
 
-      // 手動セル編集（schedules にも反映）
       updateShiftCell: (staffId, date, shiftCode) =>
         set((state) => {
           if (!state.schedule) return state
@@ -195,19 +220,92 @@ const useStore = create(
             ...state.schedule,
             [staffId]: { ...state.schedule[staffId], [date]: shiftCode },
           }
-          // date から月キーを取得
+          // ロック中のセルを編集したらロック値も追従させる
+          let newLocks = state.locks
+          if (state.locks?.[staffId]?.[date] != null) {
+            newLocks = {
+              ...state.locks,
+              [staffId]: { ...state.locks[staffId], [date]: shiftCode },
+            }
+          }
           const [y, m] = date.split('-')
           const key = `${y}-${m}`
           return {
+            // Undo 用に直前の状態を 1 段階だけ保持
+            _cellUndo: {
+              date,
+              schedule: state.schedule,
+              locks: state.locks,
+            },
+            locks: newLocks,
             schedule: newSchedule,
             schedules: {
               ...state.schedules,
-              [key]: { ...state.schedules[key], schedule: newSchedule },
+              [key]: {
+                ...state.schedules[key],
+                schedule: newSchedule,
+                locks: newLocks,
+              },
             },
           }
         }),
 
-      // ── 前月末シフト取得（前月末日のシフト → 翌月引き継ぎ用）──
+      // ── ロック ──
+      toggleLock: (staffId, date) =>
+        set((state) => {
+          const key = date.slice(0, 7)
+          const cur = state.locks[staffId]?.[date]
+          const cellCode = state.schedule?.[staffId]?.[date]
+          const newLocks = { ...state.locks }
+          if (cur != null) {
+            // ロック解除
+            const map = { ...(newLocks[staffId] || {}) }
+            delete map[date]
+            if (Object.keys(map).length === 0) delete newLocks[staffId]
+            else newLocks[staffId] = map
+          } else if (cellCode) {
+            // ロック追加（現在のシフトを固定）
+            newLocks[staffId] = { ...(newLocks[staffId] || {}), [date]: cellCode }
+          }
+          return {
+            locks: newLocks,
+            schedules: {
+              ...state.schedules,
+              [key]: { ...state.schedules[key], locks: newLocks },
+            },
+          }
+        }),
+
+      clearLocks: () =>
+        set((state) => {
+          const key = monthKey(state.year, state.month)
+          return {
+            locks: {},
+            schedules: {
+              ...state.schedules,
+              [key]: { ...state.schedules[key], locks: {} },
+            },
+          }
+        }),
+
+      isLocked: (staffId, date) => !!get().locks?.[staffId]?.[date],
+
+      // ── 日別メモ ──
+      setNote: (date, text) =>
+        set((state) => {
+          const key = date.slice(0, 7)
+          const newNotes = { ...state.notes, [date]: text }
+          if (!text) delete newNotes[date]
+          return {
+            notes: newNotes,
+            schedules: {
+              ...state.schedules,
+              [key]: { ...state.schedules[key], notes: newNotes },
+            },
+          }
+        }),
+
+      // ── 前月末シフト取得 ──
       getPrevLastShifts: () => {
         const { year, month, schedules } = get()
         const prevYear = month === 1 ? year - 1 : year
@@ -226,7 +324,81 @@ const useStore = create(
         return result
       },
 
-      // ── サンプルデータ読み込み ──
+      // 前月末時点の「連続勤務日数」を算出（月またぎ連勤の抑制用）
+      getPrevConsecutiveWork: () => {
+        const { year, month, schedules } = get()
+        const prevYear = month === 1 ? year - 1 : year
+        const prevMonth = month === 1 ? 12 : month - 1
+        const key = monthKey(prevYear, prevMonth)
+        const prevSchedule = schedules[key]?.schedule
+        if (!prevSchedule) return {}
+
+        const lastDay = new Date(prevYear, prevMonth, 0).getDate()
+        const WORK = ['D', 'E', 'L', 'N']
+        const result = {}
+        Object.entries(prevSchedule).forEach(([sid, days]) => {
+          let streak = 0
+          for (let d = lastDay; d >= 1; d--) {
+            const ds = `${monthKey(prevYear, prevMonth)}-${String(d).padStart(2, '0')}`
+            if (WORK.includes(days[ds])) streak++
+            else break
+          }
+          if (streak > 0) result[sid] = streak
+        })
+        return result
+      },
+
+      // ── 月の確定ロック ──
+      // schedules[key].finalized で「この月は確定済み」を表す
+      setMonthFinalized: (year, month, finalized) =>
+        set((state) => {
+          const key = monthKey(year, month)
+          if (!state.schedules[key]) return state
+          return {
+            schedules: {
+              ...state.schedules,
+              [key]: { ...state.schedules[key], finalized },
+            },
+          }
+        }),
+
+      isMonthFinalized: (year, month) =>
+        !!get().schedules[monthKey(year, month)]?.finalized,
+
+      // ── 希望: スタッフ単位で一括削除 ──
+      clearWishesForStaff: (staffId, monthPrefix) =>
+        set((state) => ({
+          wishes: state.wishes.filter(
+            (w) =>
+              w.staff_id !== staffId ||
+              (monthPrefix && !w.date.startsWith(monthPrefix))
+          ),
+        })),
+
+      // ── シフトセル編集の Undo ──
+      // 直近の updateShiftCell の前状態を保持（1段階）
+      _cellUndo: null,
+      undoCellEdit: () =>
+        set((state) => {
+          const u = state._cellUndo
+          if (!u) return state
+          const key = u.date.slice(0, 7)
+          return {
+            schedule: u.schedule,
+            locks: u.locks,
+            schedules: {
+              ...state.schedules,
+              [key]: {
+                ...state.schedules[key],
+                schedule: u.schedule,
+                locks: u.locks,
+              },
+            },
+            _cellUndo: null,
+          }
+        }),
+
+      // ── サンプル ──
       loadSampleData: (data) => {
         const { year, month } = get()
         const numDays = new Date(year, month, 0).getDate()
@@ -234,27 +406,20 @@ const useStore = create(
         for (let d = 1; d <= numDays; d++) {
           const date = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`
           const existing = data.day_conditions?.find((dc) => dc.date === date)
-          dayConditions.push(
-            existing || {
-              date,
-              required_per_shift: { D: 3, N: 2 },
-              event_flag: false,
-              required_staff_ids: [],
-              forbidden_staff_ids: [],
-            }
-          )
+          dayConditions.push(existing || blankDayCondition(date))
         }
         set({
-          staff: data.staff || [],
+          staff: (data.staff || []).map(withStaffDefaults),
           wishes: data.wishes || [],
           dayConditions,
           shiftTypes: data.shift_types || DEFAULT_SHIFT_TYPES,
           schedule: null,
           summary: null,
+          locks: {},
+          notes: {},
         })
       },
 
-      // ── 日別条件初期化（月切り替え時）──
       initDayConditions: () => {
         const { year, month, dayConditions } = get()
         const numDays = new Date(year, month, 0).getDate()
@@ -263,26 +428,16 @@ const useStore = create(
         const existing = dayConditions.filter((dc) => dc.date.startsWith(prefix))
         if (existing.length === numDays) return
 
-        // 他の月の条件は保持したまま、今月分だけ補完
         const otherMonths = dayConditions.filter((dc) => !dc.date.startsWith(prefix))
         const thisMonthConditions = []
         for (let d = 1; d <= numDays; d++) {
           const date = `${prefix}${String(d).padStart(2, '0')}`
           const existingDc = dayConditions.find((dc) => dc.date === date)
-          thisMonthConditions.push(
-            existingDc || {
-              date,
-              required_per_shift: { D: 3, N: 2 },
-              event_flag: false,
-              required_staff_ids: [],
-              forbidden_staff_ids: [],
-            }
-          )
+          thisMonthConditions.push(existingDc || blankDayCondition(date))
         }
         set({ dayConditions: [...otherMonths, ...thisMonthConditions] })
       },
 
-      // ── 全消去 ──
       clearAll: () =>
         set({
           staff: [],
@@ -292,10 +447,13 @@ const useStore = create(
           schedules: {},
           schedule: null,
           summary: null,
+          locks: {},
+          notes: {},
         }),
     }),
     {
       name: STORAGE_KEY,
+      storage: createJSONStorage(() => safeStorage),
       partialize: (state) => ({
         staff: state.staff,
         wishes: state.wishes,
@@ -304,8 +462,14 @@ const useStore = create(
         year: state.year,
         month: state.month,
         shiftTypes: state.shiftTypes,
-        schedules: state.schedules,  // 月別スケジュールを永続化
+        schedules: state.schedules,
       }),
+      // 旧データから移行時のスタッフデフォルト補完
+      onRehydrateStorage: () => (state) => {
+        if (state?.staff) {
+          state.staff = state.staff.map(withStaffDefaults)
+        }
+      },
     }
   )
 )

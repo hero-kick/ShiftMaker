@@ -10,6 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 cd backend
 py -3 -m pip install -r requirements.txt
 py -3 -m uvicorn main:app --port 8000   # no --reload to avoid stale cache issues
+py -3 test_solver.py        # basic solver test
+py -3 test_advanced.py      # locks / fixed_off_weekdays / max_consecutive_nights
 ```
 
 ### Frontend
@@ -30,89 +32,127 @@ npm run build      # production build check
 
 **Backend** (`backend/`): FastAPI + OR-Tools CP-SAT solver.
 
-- `main.py` — CORS allows ports 5173–5175. Endpoints: `GET /api/health`, `GET /api/sample`, `POST /api/generate`
-- `models.py` — Pydantic models: `Staff`, `ShiftType`, `DayCondition`, `Wish`, `GenerateRequest`, `ShiftResult`
-- `solver.py` — CP-SAT solver. Entry: `solve(request)` + `check_feasibility(request)` pre-check
-- `sample_data.py` — 10 nurses, 31 days (March 2026). All night-capable staff have `max_night=8`
-- `test_solver.py` — Quick constraint validation script. Run: `py -3 test_solver.py`
+- `main.py` — Logging, request middleware, CORS (env `SHIFTMAKER_CORS_ORIGINS` + LAN regex). Endpoints: `GET /api/health` (returns version + solver status), `GET /api/sample`, `POST /api/generate`. Serves static SPA in prod with cache headers + path-traversal guard. 500 errors are sanitized; details only in logs.
+- `models.py` — Pydantic models with validators: bounds on `max_night`/`max_consecutive_*` (≤31), `MAX_STAFF=80`, weekday/wish-type validation, ID-uniqueness check.
+- `solver.py` — CP-SAT solver. Entry: `solve(request)` + `check_feasibility(request)` + `_diagnose_infeasibility()` (drill-down to specific pair/wish/lock causing INFEASIBLE).
+- `sample_data.py` — 10 nurses, includes leaders, rookie, fixed-off-weekday case.
+- `test_solver.py` / `test_advanced.py` / `test_edge.py` / `test_mentor_pair.py` / `test_drill.py` / `test_diagnostics.py` — Validation scripts.
+- `bench_fairness.py` / `bench_scenarios.py` / `bench_stability.py` / `bench_nights.py` — Fairness benchmarks.
 
 **Frontend** (`frontend/src/`): React 18 + Vite. Proxies `/api` to port 8000.
 
-- `store/useStore.js` — Zustand store: staff, wishes, dayConditions, shiftTypes, schedule, summary, year, month
-- `api/client.js` — Axios with 90s timeout (solver can take up to 55s)
-- `App.jsx` — **6-tab** layout: スタッフ管理 | 希望入力 | **イベント** | 日別条件 | シフト表 | 集計
-- `components/EventCalendar.jsx` — Event management (calendar + side panel / mobile bottom sheet)
+- `store/useStore.js` — Zustand store with `persist` + `safeStorage` (quota-safe). Active workspace-scoped key.
+  Holds `staff, wishes, dayConditions, pairs, shiftTypes, year, month, schedules` (per-month: `{schedule, summary, locks, notes}`).
+- `api/client.js` — Axios with 90s timeout. `checkHealth()` for boot-time connectivity check.
+- `ErrorBoundary.jsx` — Top-level error boundary with reload + data-backup-export recovery UI.
+- `safeStorage.js` — localStorage wrapper: catches QuotaExceededError, dispatches `shiftmaker-storage-error`, memory fallback for private mode.
+- `hooks/useIsMobile.js` — Shared mobile-breakpoint hook (was duplicated in 6 components).
+- `hooks/useModalA11y.js` — Modal a11y: Escape-to-close, focus trap, focus restore.
+- `App.jsx` — **7-tab** layout. First tab is Dashboard. Shows offline banner + storage-warning banner.
+- `components/Dashboard.jsx` — Health overview, prep checks, quick links.
+- `components/Icons.jsx` — Unified SVG icon set (currentColor, 24×24).
+- `workspace.js` / `WorkspaceGate.jsx` — Per-workspace localStorage isolation with optional PIN.
 
 ## Mobile Architecture
 
-All components render dual layouts controlled by `useIsMobile(768)` hook (defined per-component, uses `matchMedia`).
-
-**Patterns:**
-- `App.jsx`: separate mobile header (month select + generate btn + "..." overflow) + bottom tab bar
-- `StaffManager.jsx`: collapsible add form + card list (tap to edit)
-- `WishInput.jsx`: horizontal scrollable staff pills + compact wish type buttons
-- `DayConditionInput.jsx`: card layout with `-/+` stepper buttons
-- `EventCalendar.jsx`: `ReactDOM.createPortal` bottom sheet modal for event editing
-- `ShiftTable.jsx`: personal view with prev/next staff navigation (default on mobile)
-- `ShiftSummary.jsx`: per-staff stat cards with 5-column grid
-
-**LAN testing:** `vite.config.js` has `host: true`. Backend CORS includes LAN IP. Run backend with `--host 0.0.0.0`.
+All components render dual layouts controlled by `useIsMobile(768)` hook.
 
 ## Tabs
 
 | Tab | Component | Purpose |
 |-----|-----------|---------|
-| スタッフ管理 | StaffManager.jsx | Add/edit/delete staff |
-| 希望入力 | WishInput.jsx | Calendar-based wish entry (希望休/有給) |
-| イベント | EventCalendar.jsx | Special events with required attendees |
-| 日別条件 | DayConditionInput.jsx | Per-day shift count requirements |
-| シフト表 | ShiftTable.jsx | Color-coded generated schedule grid |
-| 集計 | ShiftSummary.jsx | Per-staff statistics |
+| ホーム | Dashboard.jsx | Health overview + prep status + quick jumps |
+| スタッフ | StaffManager.jsx | Add/edit/delete staff + pair constraints |
+| 希望 | WishInput.jsx | Calendar-based wish entry (希望休/有給/出勤) |
+| イベント | EventCalendar.jsx | Special events with required/forbidden attendees |
+| 人数 | DayConditionInput.jsx | Per-day shift count requirements |
+| シフト表 | ShiftTable.jsx | Generated grid + lock + edit warnings + notes |
+| 集計 | ShiftSummary.jsx | Per-staff stats + fairness heatmap + score |
 
-## Data Model: DayCondition
-
-```
-date: str              # YYYY-MM-DD
-required_per_shift: dict[str, int]   # e.g. {"D": 3, "N": 2}
-event_flag: bool       # true if a special event exists
-event_name: str | None # event title (e.g. "病棟会議")
-required_staff_ids: list[str]   # must attend (not O or Y)
-forbidden_staff_ids: list[str]  # must be O
-```
-
-## Shift Codes
+## Shift Codes (7)
 
 | Code | Name | Rule |
 |------|------|------|
-| D | 日勤 | Normal day shift |
-| N | 夜勤 | Night — **must** be followed by A next day |
-| A | 明け | Post-night — always preceded by N; soft preference for O next day |
+| D | 日勤 | Day shift |
+| E | 早番 | Early |
+| N | 夜勤 | Night — **must** be followed by A |
+| A | 明け | Post-night |
+| L | 遅番 | Late — soft constraint avoids L→E next day same staff |
 | O | 休み | Day off |
-| Y | 有給 | Paid leave — **only assignable when explicitly wished** |
+| Y | 有給 | Paid leave — only on days with explicit 有給 wish |
 
-## Solver Constraints
+## Data Model
+
+### Staff (extended)
+```
+id, name, role
+night_available: bool
+max_night: int                       # monthly cap
+max_consecutive_days: int            # connect-work cap
+max_consecutive_nights: int          # default 2 (NN OK, NNN forbidden)
+is_rookie: bool
+can_lead: bool                       # leader-qualified
+fixed_off_weekdays: list[int]        # 0=月 ... 6=日
+weekend_off_target: int | None       # optional override
+```
+
+### GenerateRequest (extended)
+```
+staff, shift_types, day_conditions, wishes, year, month
+prev_last_shifts: dict[str, str]            # staff_id -> shift_code on last day of prev month
+pairs: list[StaffPair]                       # forbid (夜勤同時禁止) / require (同シフト強制)
+locked_shifts: dict[str, dict[str, str]]    # staff_id -> date -> code (partial-regen)
+```
+
+### DayCondition (extended)
+```
+date, required_per_shift, event_flag, event_name
+required_staff_ids: list[str]
+forbidden_staff_ids: list[str]
+note: str | None        # day-level note (printed in modal)
+```
+
+## Solver Constraints (v3.0)
 
 **Hard:**
 - Exactly 1 shift per staff per day
-- N→A chain (and reverse: A must be preceded by N)
-- `night_available=False` → cannot be N or A
-- Monthly night count ≤ `max_night`
-- Required shift counts per day satisfied
-- Y only on days with an explicit 有給 wish
-- `required_staff_ids` → not O, not Y
-- `forbidden_staff_ids` → must be O
+- N→A chain (bidirectional)
+- `night_available=False` → no N/A
+- `max_night` enforced
+- Per-day required counts
+- Y only when explicitly wished; required when wished
+- 出勤 wish → not O/Y
+- `required_staff_ids` → not O/Y; `forbidden_staff_ids` → O
+- **Pairs**: forbid = no shared N; require = identical shift code
+- **Leader**: ≥1 `can_lead` working per day (if any leaders exist)
+- **max_consecutive_nights**: hard cap per staff (window-based)
+- **locked_shifts**: forced equal to specified code
+- **fixed_off_weekdays**: O/Y only on listed weekdays
 
 **Soft (penalty minimization):**
-- 希望休 → prefer O (penalty 100)
-- After A, prefer O next day (penalty 20)
-- Consecutive D/N days > `max_consecutive_days` (penalty 200)
-- Night shift count variance across staff (penalty 10/deviation)
+- 希望休→O (×150), prev-month A→day1 O (×20), A→O next day (×25)
+- Long consecutive days >max (×200)
+- Night-count deviation from target (×20 each side)
+- Off-day deviation from target (×80 each side) + hard cap
+- Min 8 off-days/month (×100 per missing day)
+- **Weekend off balance** (×40 below target, ×10 above)
+- **2-day-off block per month** required (×120 if absent)
+- **No rookie-only daytime** (×250 if violation)
+- **L→E next day same staff** (×150)
+- **N-N for max_consecutive_nights=1 staff** (×300)
 
 **Feasibility pre-check** (`check_feasibility`):
-- Total `max_night` across night-capable staff must ≥ total required N shifts
-- Returns HTTP 422 with explanation if infeasible
+- Total `max_night` ≥ total required N
+- Per-day required ≤ available staff
+- N-carryover vs required_staff_ids on day 1
 
-## Known Issues / TODO
+## Frontend Features (v3.0)
 
-- Night-unavailable staff (e.g. s05, s07) can end up with very few days off (~7/31) because only D shifts count toward the consecutive-work penalty. Consider adding a soft constraint for minimum monthly off-days.
-- The soft constraint for consecutive days only counts D and N (not A). A-chains give implicit rest but aren't counted.
+- **Dashboard**: status badges per prep step, fairness wins/issues, quick jumps, recent months
+- **Locks**: click cell → popover → "ロック"; locked cells survive regenerate. Visual orange shadow
+- **Manual edit warnings**: real-time detection (N→A break, night-capable, consec, monthly cap, shortage). Red pulse + warn badge
+- **Day notes**: per-date free text, ★ for events, accessible from column header
+- **Heatmap**: color-graded grid of nights/off/weekend-off/2-off-blocks + fairness score 0-100 per staff
+- **Print**: A4 landscape optimized via `@media print`
+- **Fixed off weekdays**: per-staff weekday picker
+- **Staff reorder**: ↑/↓ buttons on desktop table

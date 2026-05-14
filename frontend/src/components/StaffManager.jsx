@@ -1,18 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import useStore from '../store/useStore'
-
-function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' && window.innerWidth <= breakpoint
-  )
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`)
-    const handler = (e) => setIsMobile(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [breakpoint])
-  return isMobile
-}
+import useIsMobile from '../hooks/useIsMobile'
 
 const defaultForm = {
   name: '',
@@ -20,8 +8,10 @@ const defaultForm = {
   night_available: true,
   max_night: 8,
   max_consecutive_days: 5,
+  max_consecutive_nights: 2,
   is_rookie: false,
   can_lead: false,
+  fixed_off_weekdays: [],
 }
 
 const defaultBulkForm = {
@@ -30,12 +20,43 @@ const defaultBulkForm = {
   night_available: true,
   max_night: 8,
   max_consecutive_days: 5,
+  max_consecutive_nights: 2,
   is_rookie: false,
   can_lead: false,
+  fixed_off_weekdays: [],
+}
+
+const WEEKDAY_NAMES = ['月', '火', '水', '木', '金', '土', '日']
+
+function WeekdayPicker({ value = [], onChange, idPrefix }) {
+  const toggle = (i) => {
+    const set = new Set(value)
+    if (set.has(i)) set.delete(i)
+    else set.add(i)
+    onChange([...set].sort((a, b) => a - b))
+  }
+  return (
+    <div className="weekday-picker">
+      {WEEKDAY_NAMES.map((n, i) => {
+        const on = value.includes(i)
+        return (
+          <button
+            type="button"
+            key={i}
+            className={`weekday-pick-btn ${on ? 'is-on' : ''} ${i === 5 ? 'sat' : ''} ${i === 6 ? 'sun' : ''}`}
+            onClick={() => toggle(i)}
+            aria-label={`${n}曜固定休 ${on ? '解除' : '設定'}`}
+          >
+            {n}
+          </button>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function StaffManager() {
-  const { staff, pairs, addStaff, addStaffBulk, updateStaff, removeStaff, addPair, removePair } = useStore()
+  const { staff, pairs, addStaff, addStaffBulk, updateStaff, removeStaff, addPair, removePair, moveStaff } = useStore()
   const [form, setForm] = useState(defaultForm)
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
@@ -129,13 +150,39 @@ export default function StaffManager() {
     }))
   }
 
+  const [editError, setEditError] = useState('')
+
   const saveEdit = (id) => {
-    updateStaff(id, editForm)
+    const name = (editForm.name || '').trim()
+    if (!name) {
+      setEditError('名前を入力してください')
+      return
+    }
+    // 自分以外に同名がいないか
+    if (staff.some((s) => s.id !== id && s.name === name)) {
+      setEditError('同名のスタッフが既に登録されています')
+      return
+    }
+    // 数値フィールドの範囲を丸める
+    const clamp = (v, lo, hi, dflt) => {
+      const n = Number(v)
+      return Number.isFinite(n) ? Math.max(lo, Math.min(hi, Math.round(n))) : dflt
+    }
+    updateStaff(id, {
+      ...editForm,
+      name,
+      role: (editForm.role || '').trim(),
+      max_night: clamp(editForm.max_night, 0, 31, 8),
+      max_consecutive_days: clamp(editForm.max_consecutive_days, 1, 31, 5),
+      max_consecutive_nights: clamp(editForm.max_consecutive_nights, 1, 31, 2),
+    })
     setEditingId(null)
+    setEditError('')
   }
 
   const cancelEdit = () => {
     setEditingId(null)
+    setEditError('')
   }
 
   const handleDelete = (s) => {
@@ -195,6 +242,10 @@ export default function StaffManager() {
             全員 新人
           </label>
         </div>
+        <div className="form-group">
+          <label>連続夜勤上限</label>
+          <input type="number" name="max_consecutive_nights" value={bulkForm.max_consecutive_nights} onChange={handleBulkChange} min="1" max="5" />
+        </div>
         <button type="submit" className="btn btn-primary">{bulkForm.count}名 一括追加</button>
       </div>
       {bulkError && <p className="error-msg">{bulkError}</p>}
@@ -238,6 +289,18 @@ export default function StaffManager() {
             <input type="checkbox" name="is_rookie" checked={form.is_rookie} onChange={handleChange} />
             新人
           </label>
+        </div>
+        <div className="form-group">
+          <label>連続夜勤上限</label>
+          <input type="number" name="max_consecutive_nights" value={form.max_consecutive_nights} onChange={handleChange} min="1" max="5" />
+        </div>
+        <div className="form-group form-group-wide">
+          <label>固定休曜日（任意・複数選択可）</label>
+          <WeekdayPicker
+            value={form.fixed_off_weekdays || []}
+            onChange={(v) => setForm({ ...form, fixed_off_weekdays: v })}
+            idPrefix="add"
+          />
         </div>
         <button type="submit" className="btn btn-primary">追加</button>
       </div>
@@ -365,6 +428,23 @@ export default function StaffManager() {
                       新人
                     </label>
                   </div>
+                  <div className="staff-card-row" style={{ alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)', minWidth: 90 }}>連続夜勤上限</span>
+                    <input
+                      type="number" name="max_consecutive_nights"
+                      value={editForm.max_consecutive_nights ?? 2}
+                      onChange={handleEditChange} min="1" max="5"
+                      className="inline-input narrow"
+                    />
+                  </div>
+                  <div className="staff-card-field">
+                    <label>固定休曜日</label>
+                    <WeekdayPicker
+                      value={editForm.fixed_off_weekdays || []}
+                      onChange={(v) => setEditForm({ ...editForm, fixed_off_weekdays: v })}
+                    />
+                  </div>
+                  {editError && <p className="error-msg">{editError}</p>}
                   <div className="staff-card-actions">
                     <button className="btn btn-success btn-sm" onClick={() => saveEdit(s.id)}>保存</button>
                     <button className="btn btn-sm" onClick={cancelEdit} style={{ background: '#757575', color: 'white' }}>戻す</button>
@@ -387,8 +467,13 @@ export default function StaffManager() {
                   </div>
                   <div className="staff-card-bottom">
                     <div className="staff-card-details">
-                      <span>夜勤上限 {s.max_night}回</span>
-                      <span>連続 {s.max_consecutive_days}日</span>
+                      <span>夜勤 {s.max_night}回</span>
+                      <span>連続{s.max_consecutive_days}日</span>
+                      {s.fixed_off_weekdays?.length > 0 && (
+                        <span style={{ color: '#1565C0' }}>
+                          固定休: {s.fixed_off_weekdays.map((i) => WEEKDAY_NAMES[i]).join('')}
+                        </span>
+                      )}
                     </div>
                     <button
                       className="staff-card-delete"
@@ -433,6 +518,7 @@ export default function StaffManager() {
                       <td>
                         <button className="btn btn-success btn-sm" onClick={() => saveEdit(s.id)}>保存</button>
                         <button className="btn btn-secondary btn-sm" onClick={cancelEdit} style={{ background: '#757575' }}>キャンセル</button>
+                        {editError && <div className="error-msg" style={{ marginTop: 4 }}>{editError}</div>}
                       </td>
                     </tr>
                   ) : (
@@ -440,13 +526,30 @@ export default function StaffManager() {
                       <td className="staff-name">
                         {s.name}
                         {s.is_rookie && <span className="badge badge-rookie" style={{ marginLeft: 6 }}>新人</span>}
+                        {s.fixed_off_weekdays?.length > 0 && (
+                          <span className="badge" style={{ marginLeft: 6, background: '#E3F2FD', color: '#1565C0' }}>
+                            固定休 {s.fixed_off_weekdays.map((i) => WEEKDAY_NAMES[i]).join('')}
+                          </span>
+                        )}
                       </td>
                       <td>{s.role || '-'}</td>
                       <td><span className={`badge ${s.night_available ? 'badge-success' : 'badge-gray'}`}>{s.night_available ? '可' : '不可'}</span></td>
                       <td>{s.can_lead ? <span className="badge badge-lead">可</span> : <span className="badge badge-gray">-</span>}</td>
                       <td>{s.max_night}回</td>
-                      <td>{s.max_consecutive_days}日</td>
+                      <td>{s.max_consecutive_days}日 / 夜勤{s.max_consecutive_nights ?? 2}</td>
                       <td>
+                        <button
+                          className="btn btn-sm"
+                          title="上に移動"
+                          onClick={() => moveStaff(s.id, 'up')}
+                          style={{ minHeight: 32, padding: '4px 8px' }}
+                        >↑</button>
+                        <button
+                          className="btn btn-sm"
+                          title="下に移動"
+                          onClick={() => moveStaff(s.id, 'down')}
+                          style={{ minHeight: 32, padding: '4px 8px' }}
+                        >↓</button>
                         <button className="btn btn-warning btn-sm" onClick={() => startEdit(s)}>編集</button>
                         <button className="btn btn-danger btn-sm" onClick={() => handleDelete(s)}>削除</button>
                       </td>
@@ -463,9 +566,13 @@ export default function StaffManager() {
       <div className={isMobile ? '' : 'card'} style={{ marginTop: 16 }}>
         <div className="staff-list-header" style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
           <span className="staff-list-title">出勤ペア制約</span>
-          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-            「夜勤NG」= 2人とも夜勤の同日は作らない（日勤や明けの被りはOK）／ 「同シフトマスト」= 2人を毎日同じシフトに揃える
-          </span>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+            <strong>同シフトマスト</strong>: 片方が「新人」のとき<u>指導ペア</u>として扱います。
+            指導者が有給・固定休・絶対休みの日は新人も自動的に休みになります。
+            両者とも非新人なら同格ペアとして同じシフトに揃えます。
+            <br />
+            <strong>夜勤NG</strong>: 2人とも同日に夜勤しません（日勤や明けの被りはOK）。
+          </div>
         </div>
 
         {staff.length < 2 ? (
@@ -502,7 +609,7 @@ export default function StaffManager() {
                 className="pair-select"
               >
                 <option value="forbid">夜勤NG（同日に2人とも夜勤させない）</option>
-                <option value="require">同シフトマスト（必ず同じシフトで一緒）</option>
+                <option value="require">同シフトマスト（新人ペアは指導者の不在日に新人も自動休）</option>
               </select>
               <button className="btn btn-primary btn-sm" onClick={submitPair}>追加</button>
             </div>
@@ -514,16 +621,26 @@ export default function StaffManager() {
               </p>
             ) : (
               <ul className="pair-list">
-                {pairs.map((p) => (
+                {pairs.map((p) => {
+                  const a = staff.find((s) => s.id === p.staff_a_id)
+                  const b = staff.find((s) => s.id === p.staff_b_id)
+                  const isMentor = p.type === 'require' && a && b && (!!a.is_rookie !== !!b.is_rookie)
+                  return (
                   <li key={p.id} className={`pair-item ${p.type === 'forbid' ? 'pair-forbid' : 'pair-require'}`}>
                     <span className="pair-names">
                       <strong>{staffNameById(p.staff_a_id)}</strong>
-                      <span className="pair-rel">{p.type === 'forbid' ? '✕ 夜勤NG' : '◯ 同シフトマスト'}</span>
+                      {a?.is_rookie && <span className="badge badge-rookie" style={{ marginLeft: 4 }}>新人</span>}
+                      <span className="pair-rel">
+                        {p.type === 'forbid' ? '✕ 夜勤NG' :
+                          isMentor ? '🎓 指導ペア（同シフト）' : '◯ 同シフトマスト'}
+                      </span>
                       <strong>{staffNameById(p.staff_b_id)}</strong>
+                      {b?.is_rookie && <span className="badge badge-rookie" style={{ marginLeft: 4 }}>新人</span>}
                     </span>
                     <button className="btn btn-danger btn-sm" onClick={() => removePair(p.id)}>削除</button>
                   </li>
-                ))}
+                  )
+                })}
               </ul>
             )}
           </>

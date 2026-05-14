@@ -20,7 +20,8 @@ apiClient.interceptors.response.use(
 )
 
 export const generateShift = (data) => apiClient.post('/generate', data)
-export const getSampleData = () => apiClient.get('/sample')
+export const getSampleData = (year, month) =>
+  apiClient.get('/sample', { params: year && month ? { year, month } : {} })
 export const checkHealth = () => apiClient.get('/health')
 
 export default apiClient
